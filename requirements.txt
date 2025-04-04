@@ -1,0 +1,13 @@
+flask==3.0.3
+python-dotenv==1.0.1
+requests==2.32.3
+tqdm==4.66.2
+tiktoken==0.9.0 # 설치 시 --no-build-isolation 옵션 사용 필요 (예: pip install tiktoken --no-build-isolation)
+python-dateutil==2.9.0
+urllib3==2.3.0
+Werkzeug==3.0.3
+Jinja2==3.1.3
+regex==2024.11.6
+certifi==2025.1.31
+charset-normalizer==3.4.1
+idna==3.10 
