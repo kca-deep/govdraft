@@ -1,118 +1,103 @@
-# GovDraft - 정부 문서 템플릿 검색 시스템
+# 정부 문서 템플릿 검색기 (GovDraft)
 
-공공데이터포털 API를 활용하여 다양한 정부 문서 템플릿(보도자료, 연설문, 정책 보고서, 발간사, 회의·행사 계획 등)을 검색하고 선택할 수 있는 웹 애플리케이션입니다.
+공공데이터포털 API를 활용하여 정부 문서를 검색하고 결과를 표시하는 웹 애플리케이션입니다.
 
-## 기능
+## 주요 기능
 
-- 키워드 검색: 원하는 키워드로 템플릿 검색
-- 필터링: 문서 유형, 발행 부처 등으로 필터링
-- 상세 정보 확인: 각 템플릿의 상세 정보 확인
-- 템플릿 선택: 원하는 템플릿 선택 및 사용
+- 보도자료, 연설문, 간행물, 보고서, 계획서 등 다양한 정부 문서 검색
+- 문서 유형별 검색 필터링
+- 사용자 친화적인 인터페이스로 검색 결과 표시
+- 페이지네이션을 통한 대량의 검색 결과 탐색
+- 토큰 비용 계산 API (OpenAI GPT 모델 사용 시)
 
 ## 기술 스택
 
-- Python 3.13.2
-- Flask 3.0.3
-- Tailwind CSS (CDN 방식)
-- 공공데이터포털 API
+- **프론트엔드**: HTML, JavaScript, Tailwind CSS, shadcn UI
+- **백엔드**: Python, Flask
+- **API**: 공공데이터포털 오픈 API
+- **기타 도구**: tiktoken (토큰 계산), dotenv (환경변수 관리)
 
-## 설치 및 실행 방법
+## 설치 방법
 
-### 1. 필요 조건
+1. 저장소 클론
+   ```bash
+   git clone https://github.com/yourusername/govdraft.git
+   cd govdraft
+   ```
 
-- Python 3.13.2
-- pip (패키지 관리자)
+2. 가상환경 생성 및 활성화
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # macOS/Linux
+   source venv/bin/activate
+   ```
 
-### 2. 저장소 복제
+3. 의존성 설치
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-git clone https://github.com/yourusername/govdraft.git
-cd govdraft
-```
+4. 환경 변수 설정
+   - `.env.example` 파일을 `.env`로 복사하고 필요한 값을 입력
+   ```bash
+   cp .env.example .env
+   # .env 파일을 편집하여 API 키 등 필요한 환경 변수 설정
+   ```
 
-### 3. 가상 환경 설정 (선택사항)
+## 사용 방법
 
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
+1. 애플리케이션 실행
+   ```bash
+   python app.py
+   ```
 
-### 4. 의존성 설치
+2. 웹 브라우저에서 접속
+   - 기본 URL: `http://localhost:5000`
 
-Python 3.13.2 환경에서는 tiktoken 패키지 설치를 위해 특별한 옵션이 필요합니다:
+3. 검색 기능 사용
+   - 키워드 입력 및 문서 유형 선택 후 검색
+   - 결과 목록에서 원하는 문서 선택하여 상세 내용 확인
 
-```bash
-# 환경 변수 설정
-# Windows
-set PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
-# Linux/Mac
-export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+## API 엔드포인트
 
-# requirements.txt의 다른 패키지 설치
-pip install -r requirements.txt
+- `GET /`: 메인 검색 페이지
+- `GET /search`: 템플릿 검색 API
+  - 파라미터: `keyword`, `page`, `per_page`, `doc_type`, `manager`
+- `GET /template/<template_id>`: 템플릿 상세 정보 페이지
+- `POST /api/token-cost`: 토큰 비용 계산 API
+- `GET /health`: 서버 상태 확인
 
-# tiktoken만 별도 설치 (이미 requirements.txt에 포함되어 있지만, 직접 설치 시)
-pip install tiktoken --no-build-isolation
-```
-
-### 5. 환경 변수 설정
-
-`.env` 파일을 프로젝트 루트 디렉토리에 생성하고 다음 내용을 추가합니다:
-
-```
-LOG_LEVEL=INFO
-PUBLIC_DATA_API_KEY=your_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
-PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
-```
-
-공공데이터포털 API 키는 [공공데이터포털](https://www.data.go.kr/)에서 발급받을 수 있습니다.
-
-### 6. 애플리케이션 실행
-
-```bash
-python app.py
-```
-
-웹 브라우저에서 `http://localhost:5000`으로 접속하여 애플리케이션을 사용할 수 있습니다.
-
-## 웹 애플리케이션 사용법
-
-1. 메인 화면에서 검색창에 원하는 키워드 입력
-2. 필터 옵션을 사용하여 결과 정제
-3. 검색 결과에서 원하는 템플릿의 '상세 보기' 클릭
-4. 상세 정보 확인 후 '이 템플릿 선택' 버튼 클릭
-
-## 명령줄 도구 사용법
-
-템플릿 검색을 위한 명령줄 도구도 제공합니다:
-
-```bash
-python main.py
-```
-
-프롬프트에 따라 검색 키워드를 입력하면 결과가 `templates.json` 파일로 저장됩니다.
-
-## 로깅
-
-애플리케이션 로그는 `logs` 디렉토리에 `govdraft_YYYYMMDD.log` 형식으로 저장됩니다.
-
-## 문제 해결
-
-### tiktoken 설치 오류
-
-Python 3.13.2에서 tiktoken 설치 시 다음과 같은 오류가 발생할 수 있습니다:
+## 프로젝트 구조
 
 ```
-error: cargo failed with code: 1 
+govdraft/
+├── app.py                # 웹 애플리케이션 메인 파일
+├── templates/            # HTML 템플릿
+│   ├── index.html        # 메인 검색 페이지
+│   ├── template_detail.html  # 템플릿 상세 페이지
+│   ├── 404.html          # 404 오류 페이지
+│   └── 500.html          # 500 오류 페이지
+├── logs/                 # 로그 파일 디렉토리
+├── .env                  # 환경 변수 파일
+├── requirements.txt      # 프로젝트 의존성
+├── README.md             # 프로젝트 문서
+└── LICENSE               # 라이센스 정보
 ```
 
-이 문제를 해결하려면:
+## 라이센스
 
-1. `.env` 파일에 `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` 환경 변수 추가
-2. 명령줄에서 `pip install tiktoken --no-build-isolation` 명령 실행
+이 프로젝트는 MIT 라이센스에 따라 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
-## 라이선스
+## 기여 방법
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 LICENSE 파일을 참조하세요. 
+1. 이 저장소를 포크합니다.
+2. 새로운 기능 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`).
+3. 변경 사항을 커밋합니다 (`git commit -m 'Add some amazing feature'`).
+4. 브랜치에 푸시합니다 (`git push origin feature/amazing-feature`).
+5. Pull Request를 생성합니다.
+
+## 문의
+
+프로젝트에 관한 문의나 버그 리포트는 이슈 트래커를 통해 제출해 주세요. 

@@ -52,35 +52,55 @@
             font-family: 'Noto Sans KR', sans-serif;
             background-color: var(--background);
             color: var(--card-foreground);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .template-card {
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease; /* Added opacity transition */
             border-radius: var(--radius);
             border: 1px solid var(--border);
             background-color: var(--card);
+            opacity: 1; /* Ensure visible by default */
         }
         
         .template-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-4px) scale(1.02); /* Slightly adjusted hover effect */
+            box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.1), 0 5px 8px -3px rgba(0, 0, 0, 0.06);
         }
         
         .loading {
-            display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
+            display: none; /* 기본 상태에서 숨김 */
         }
         
         .loading.active {
-            display: flex;
+            display: flex !important; /* !important로 인라인 스타일 override */
             opacity: 1;
             pointer-events: auto;
         }
         
+        .loading.complete {
+            opacity: 0;
+            pointer-events: none;
+            display: none !important; /* !important로 확실하게 숨김 처리 */
+            transition: opacity 0.3s ease;
+        }
+        
         .content-area {
-            white-space: pre-line;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.6;
+        }
+        .content-area p {
+            margin-bottom: 1rem;
+        }
+        .content-area br {
+            display: block;
+            content: "";
+            margin-top: 0.5rem;
         }
         .content-area table {
             border-collapse: collapse;
@@ -107,10 +127,10 @@
             justify-content: center;
             border-radius: var(--radius);
             font-weight: 500;
-            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 150ms;
+            /* Smoother transition for multiple properties */
+            transition: all 0.2s ease-in-out;
             padding: 0.5rem 1rem;
+            transform: scale(1); /* Base scale for hover effect */
         }
 
         .btn-primary {
@@ -120,6 +140,8 @@
 
         .btn-primary:hover {
             background-color: #2563eb;
+            transform: scale(1.03); /* Add subtle scale on hover */
+            box-shadow: 0 4px 10px -2px rgba(59, 130, 246, 0.4); /* Add subtle shadow */
         }
 
         .btn-outline {
@@ -130,6 +152,7 @@
 
         .btn-outline:hover {
             background-color: var(--muted);
+            transform: scale(1.03); /* Add subtle scale on hover */
         }
 
         .input {
@@ -251,11 +274,45 @@
             height: 2px;
             background-color: var(--primary);
         }
+        
+        /* 애니메이션 효과 */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+        
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 테마 전환 애니메이션 */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .theme-transition {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
     </style>
 </head>
-<body class="bg-background min-h-screen flex flex-col">
+<body class="bg-background min-h-screen flex flex-col transition-all">
     <!-- 테마 토글 버튼 -->
-    <div class="theme-toggle" id="theme-toggle">
+    <div class="theme-toggle hover-lift" id="theme-toggle">
         <i class="fas fa-moon" id="theme-icon"></i>
     </div>
 
@@ -299,23 +356,23 @@
 
     <!-- 메인 콘텐츠 -->
     <main class="flex-grow">
-        <div class="container mx-auto px-4 py-8">
-            <div class="mb-8">
+        <div class="container mx-auto px-4 py-8 fade-in">
+            <div class="mb-8 fade-in" style="animation-delay: 0.1s;">
                 <h2 class="text-3xl font-bold mb-2 text-card-foreground">정부 문서 템플릿 검색</h2>
                 <p class="text-muted-foreground">보도자료, 연설문, 정책 보고서 등 다양한 정부 문서 템플릿을 검색하고 선택하세요.</p>
             </div>
             
             <!-- 검색 폼 카드 -->
-            <div class="card p-6 mb-8">
+            <div class="card p-6 mb-8 fade-in hover-lift theme-transition" style="animation-delay: 0.2s;">
                 <h2 class="text-lg font-semibold mb-4 text-card-foreground">검색 조건 입력</h2>
                 
                 <form id="search-form" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="flex flex-wrap md:flex-nowrap items-end gap-3">
                         <!-- 문서 유형 선택 (필수) -->
-                        <div>
+                        <div class="w-full md:w-1/6">
                             <label for="doc_type" class="label">문서 유형 <span class="text-destructive">*</span></label>
                             <select id="doc_type" name="doc_type" required
-                                class="select input w-full">
+                                class="select input w-full theme-transition">
                                 <option value="" disabled selected>문서 유형</option>
                                 <option value="press">보도자료</option>
                                 <option value="speech">연설문</option>
@@ -327,23 +384,23 @@
                         </div>
                         
                         <!-- 검색어 (필수) -->
-                        <div class="md:col-span-2">
+                        <div class="w-full md:w-2/5 flex-grow">
                             <label for="search-input" class="label">제목 키워드 <span class="text-destructive">*</span></label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                                     <i class="fas fa-search text-muted-foreground"></i>
                                 </span>
                                 <input type="text" id="search-input" name="keyword" required
-                                    class="input pl-10"
+                                    class="input pl-10 pr-3 w-full theme-transition"
                                     placeholder="검색어를 입력하세요">
                             </div>
                         </div>
                         
                         <!-- 발행 부처 -->
-                        <div>
+                        <div class="w-full md:w-1/6">
                             <label for="ministry" class="label">발행 부처</label>
                             <select id="ministry" name="ministry" 
-                                class="select input w-full">
+                                class="select input w-full theme-transition">
                                 <option value="">모든 부처</option>
                                 <option value="행정안전부">행정안전부</option>
                                 <option value="국토교통부">국토교통부</option>
@@ -354,10 +411,10 @@
                         </div>
                         
                         <!-- 정렬 기준 -->
-                        <div>
+                        <div class="w-full md:w-1/6">
                             <label for="sort-by" class="label">정렬 기준</label>
                             <select id="sort-by" name="sort" 
-                                class="select input w-full">
+                                class="select input w-full theme-transition">
                                 <option value="latest">최신순</option>
                                 <option value="oldest">오래된순</option>
                                 <option value="relevance">관련성순</option>
@@ -365,20 +422,20 @@
                         </div>
                         
                         <!-- 보도자료 전용 - 담당자 입력 필드 (기본적으로 숨김) -->
-                        <div id="manager-input-container" class="hidden">
+                        <div id="manager-input-container" class="w-full md:w-1/6 hidden">
                             <label for="manager-input" class="label">
                                 담당자 <span id="manager-required" class="text-destructive hidden">*</span>
                             </label>
                             <input type="text" id="manager-input" name="manager" 
-                                class="input"
+                                class="input w-full theme-transition"
                                 placeholder="담당자 이름">
                         </div>
                         
                         <!-- 검색 버튼 -->
-                        <div class="self-end">
+                        <div class="w-full md:w-auto">
                             <button type="submit" id="search-button" 
-                                class="btn btn-primary w-full h-10">
-                                <i class="fas fa-search mr-2"></i> 검색하기
+                                class="btn btn-primary w-full md:w-auto h-10 aspect-square rounded-full theme-transition flex items-center justify-center hover:scale-105 hover:shadow-md transition-all">
+                                <i class="fas fa-search text-lg"></i>
                             </button>
                         </div>
                     </div>
@@ -386,31 +443,34 @@
             </div>
             
             <!-- 검색 안내 메시지 (초기 상태) -->
-            <div id="initial-message" class="flex flex-col items-center justify-center py-16 text-center">
-                <div class="bg-muted rounded-full p-4 mb-4">
+            <div id="initial-message" class="flex flex-col items-center justify-center py-16 text-center fade-in" style="animation-delay: 0.3s;">
+                <div class="bg-muted rounded-full p-4 mb-4 theme-transition">
                     <i class="fas fa-file-alt text-muted-foreground text-5xl"></i>
                 </div>
                 <h3 class="text-xl font-medium text-card-foreground mb-2">문서 유형과 키워드를 입력해주세요</h3>
                 <p class="text-muted-foreground">문서 유형과 키워드는 필수 입력 사항입니다.</p>
             </div>
             
+            <!-- 검색 결과 요약 -->
+            <div id="search-summary" class="mb-4 text-muted-foreground hidden fade-in">
+                총 <span id="result-count" class="font-semibold text-card-foreground">0</span>개의 검색 결과
+            </div>
+            
             <!-- 로딩 표시기 -->
-            <div id="loading" class="loading flex flex-col items-center justify-center my-12">
-                <div class="relative w-16 h-16">
+            <div id="loading" class="loading flex flex-col items-center justify-center my-8 fade-in" style="display: none;">
+                <div class="relative w-12 h-12 mb-2">
                     <div class="animate-spin absolute inset-0 rounded-full border-b-2 border-primary"></div>
                     <div class="animate-ping absolute inset-0 rounded-full border border-primary opacity-25"></div>
                 </div>
-                <span class="mt-4 text-lg text-muted-foreground">검색 중...</span>
+                <span class="text-base text-muted-foreground">검색 중...</span>
             </div>
             
             <!-- 검색 결과 -->
-            <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden">
-                <!-- 템플릿 카드는 JavaScript로 동적 생성됨 -->
-            </div>
+            <div id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
             
             <!-- 검색 결과 없음 메시지 -->
-            <div id="no-results" class="hidden flex flex-col items-center justify-center py-16 text-center">
-                <div class="bg-muted rounded-full p-4 mb-4">
+            <div id="no-results" class="hidden flex flex-col items-center justify-center py-16 text-center fade-in">
+                <div class="bg-muted rounded-full p-4 mb-4 theme-transition">
                     <i class="fas fa-search text-muted-foreground text-5xl"></i>
                 </div>
                 <h3 class="text-xl font-medium text-card-foreground mb-2">검색 결과가 없습니다</h3>
@@ -418,7 +478,7 @@
             </div>
             
             <!-- 페이지네이션 -->
-            <div class="flex justify-center mt-8">
+            <div class="flex flex-col items-center justify-center mt-8 fade-in" style="animation-delay: 0.4s;">
                 <nav class="inline-flex rounded-md shadow-sm" id="pagination">
                     <!-- 페이지네이션 버튼은 JavaScript로 동적 생성됨 -->
                 </nav>
@@ -491,12 +551,12 @@
     </footer>
     
     <!-- 템플릿 모달 -->
-    <div id="template-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden backdrop-blur-sm">
-        <div class="card max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div id="template-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden backdrop-blur-sm theme-transition">
+        <div class="card max-w-4xl w-full max-h-[90vh] overflow-y-auto theme-transition hover-lift">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="modal-title" class="text-2xl font-bold text-card-foreground">템플릿 상세 정보</h2>
-                    <button id="close-modal" class="text-muted-foreground hover:text-card-foreground transition-colors">
+                    <button id="close-modal" class="text-muted-foreground hover:text-card-foreground transition-colors rounded-full hover:bg-muted p-2">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -504,7 +564,7 @@
                     <!-- 모달 내용은 JavaScript로 동적 생성됨 -->
                 </div>
                 <div class="mt-6 flex justify-end">
-                    <button id="select-template" class="btn btn-primary">
+                    <button id="select-template" class="btn btn-primary theme-transition">
                         이 템플릿 선택
                     </button>
                 </div>
@@ -517,19 +577,58 @@
             // 테마 토글 기능 추가
             const themeToggle = document.getElementById('theme-toggle');
             const themeIcon = document.getElementById('theme-icon');
+            const htmlElement = document.documentElement;
             
             // 테마 상태 확인 및 초기 설정
             const isDarkMode = localStorage.getItem('darkMode') === 'true';
             if (isDarkMode) {
-                document.documentElement.classList.add('dark');
+                htmlElement.classList.add('dark');
                 themeIcon.classList.remove('fa-moon');
                 themeIcon.classList.add('fa-sun');
             }
             
+            // DOM 요소들에 테마 전환 클래스 추가
+            document.querySelectorAll('.card, .input, select, button, .badge').forEach(el => {
+                el.classList.add('theme-transition');
+            });
+            
+            // 부드러운 스크롤 효과
+            const smoothScroll = (target, duration) => {
+                const targetPosition = target.getBoundingClientRect().top;
+                const startPosition = window.pageYOffset;
+                const distance = targetPosition - startPosition;
+                let startTime = null;
+                
+                const animation = currentTime => {
+                    if (startTime === null) startTime = currentTime;
+                    const timeElapsed = currentTime - startTime;
+                    const run = ease(timeElapsed, startPosition, distance, duration);
+                    window.scrollTo(0, run);
+                    if (timeElapsed < duration) requestAnimationFrame(animation);
+                };
+                
+                const ease = (t, b, c, d) => {
+                    t /= d / 2;
+                    if (t < 1) return c / 2 * t * t + b;
+                    t--;
+                    return -c / 2 * (t * (t - 2) - 1) + b;
+                };
+                
+                requestAnimationFrame(animation);
+            };
+            
+            // 페이지네이션 버튼 클릭 시 부드러운 스크롤
+            document.getElementById('pagination').addEventListener('click', event => {
+                const target = document.getElementById('templates-container');
+                if (target) {
+                    smoothScroll(target, 500);
+                }
+            });
+            
             // 테마 토글 이벤트
             themeToggle.addEventListener('click', function() {
-                document.documentElement.classList.toggle('dark');
-                const isDark = document.documentElement.classList.contains('dark');
+                htmlElement.classList.toggle('dark');
+                const isDark = htmlElement.classList.contains('dark');
                 localStorage.setItem('darkMode', isDark);
                 
                 if (isDark) {
@@ -539,6 +638,14 @@
                     themeIcon.classList.remove('fa-sun');
                     themeIcon.classList.add('fa-moon');
                 }
+                
+                // 테마 전환 시 특별 효과
+                document.querySelectorAll('.card, .badge').forEach(el => {
+                    el.classList.add('theme-transition-active');
+                    setTimeout(() => {
+                        el.classList.remove('theme-transition-active');
+                    }, 300);
+                });
             });
 
             // 요소 참조
@@ -547,7 +654,7 @@
             const docTypeSelect = document.getElementById('doc_type');
             const ministrySelect = document.getElementById('ministry');
             const sortBySelect = document.getElementById('sort-by');
-            const searchResults = document.getElementById('search-results');
+            const searchResults = document.getElementById('templates-container');
             const initialMessage = document.getElementById('initial-message');
             const noResults = document.getElementById('no-results');
             const loading = document.getElementById('loading');
@@ -585,35 +692,22 @@
             searchForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                // 폼 유효성 검사
-                if (!docTypeSelect.value) {
-                    alert('문서 유형을 선택해주세요.');
-                    docTypeSelect.focus();
-                    return;
-                }
+                // 로딩 상태 초기화
+                const loading = document.getElementById('loading');
+                loading.style.display = 'none'; // 먼저 확실히 숨김
+                loading.classList.remove('active', 'complete');
                 
-                if (!searchInput.value.trim()) {
-                    alert('검색어를 입력해주세요.');
-                    searchInput.focus();
-                    return;
-                }
+                // 검색 결과 초기화
+                document.getElementById('templates-container').innerHTML = '';
+                document.getElementById('search-summary').classList.add('hidden');
+                document.getElementById('pagination').innerHTML = '';
+                document.getElementById('pagination').classList.add('hidden');
+                document.getElementById('no-results').classList.add('hidden');
                 
-                // 보도자료 유형에서 담당자 필드 검증
-                if (docTypeSelect.value === 'press' && !managerInput.value.trim()) {
-                    alert('보도자료 검색 시 담당자 정보를 입력해주세요.');
-                    managerInput.focus();
-                    return;
-                }
-                
-                // 페이지 초기화
-                currentPage = 1;
-                
-                // 기존 로딩 상태 초기화
-                loading.classList.remove('active');
+                // 페이지 초기화 및 검색 실행 (약간의 지연으로 DOM 업데이트 보장)
                 setTimeout(() => {
-                    // 검색 실행
-                    fetchTemplates();
-                }, 100); // 약간의 지연을 줘서 DOM 업데이트 시간 확보
+                    fetchTemplates(1);
+                }, 50);
             });
             
             // 모달 닫기
@@ -631,202 +725,271 @@
                 }
             });
             
-            // 템플릿 데이터 가져오기
-            function fetchTemplates() {
+            // API 호출 및 템플릿 가져오기
+            async function fetchTemplates(page = 1) {
                 const keyword = searchInput.value.trim();
                 const docType = docTypeSelect.value;
-                const ministry = ministrySelect.value;
-                const sortBy = sortBySelect.value;
+                const currentPage = page;
+                const perPage = 12; // 페이지당 표시할 항목 수
                 
-                // 검색 상태 업데이트
-                initialMessage.classList.add('hidden');
-                searchResults.innerHTML = '';
-                searchResults.classList.add('hidden');
-                noResults.classList.add('hidden');
+                // 로딩 상태 활성화 (인라인 스타일 직접 설정)
+                const loading = document.getElementById('loading');
+                loading.style.display = 'flex';
+                loading.classList.add('active');
+                loading.classList.remove('complete');
                 
-                // 로딩 상태 초기화 후 활성화
-                loading.classList.remove('active');
-                // 강제로 리플로우 발생시켜 transition이 제대로 적용되게 함
-                void loading.offsetWidth;
-                loading.classList.add('active'); // 로딩 표시기 활성화
-                
-                // 기본 쿼리 파라미터
-                let queryParams = `keyword=${encodeURIComponent(keyword)}&page=${currentPage}&per_page=12&doc_type=${docType}`;
-                
-                // 보도자료일 경우 manager 파라미터 추가
-                if (docType === 'press' && managerInput.value.trim()) {
-                    queryParams += `&manager=${encodeURIComponent(managerInput.value.trim())}`;
-                }
-                
-                // API 요청 URL 구성
-                const url = `/search?${queryParams}`;
-                
-                // 타임아웃 설정 (10초 후에도 응답이 없으면 로딩 표시기 숨김)
-                const timeoutId = setTimeout(() => {
-                    loading.classList.remove('active');
-                    noResults.querySelector('h3').textContent = '요청 시간 초과';
-                    noResults.querySelector('p').textContent = '서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.';
-                    noResults.classList.remove('hidden');
+                // 10초 후에 자동으로 로딩 표시 종료 (API 응답 없을 경우 대비)
+                const loadingTimeout = setTimeout(() => {
+                    hideLoading();
                 }, 10000);
                 
-                // API 호출
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        // 타임아웃 취소
-                        clearTimeout(timeoutId);
+                // 로딩 숨김 함수
+                function hideLoading() {
+                    loading.classList.remove('active');
+                    loading.classList.add('complete');
+                    loading.style.display = 'none'; // 인라인 스타일 직접 설정
+                }
+                
+                try {
+                    // API 요청 생성
+                    let url = `/search?page=${currentPage}&per_page=${perPage}`;
+                    
+                    if (keyword) {
+                        url += `&keyword=${encodeURIComponent(keyword)}`;
+                    }
+                    
+                    if (docType && docType !== "all") {
+                        url += `&doc_type=${encodeURIComponent(docType)}`;
+                    }
+                    
+                    // 보도자료인 경우 manager 파라미터 추가
+                    if (docType === "press" && managerInput.value.trim()) {
+                        url += `&manager=${encodeURIComponent(managerInput.value.trim())}`;
+                    }
+                    
+                    const response = await fetch(url);
+                    
+                    // 로딩 타임아웃 취소
+                    clearTimeout(loadingTimeout);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 요청 실패: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 검색 결과 및 페이지네이션 표시
+                    if (data.items && data.items.length > 0) {
+                        // 초기 메시지 숨기기
+                        if (initialMessage) initialMessage.classList.add('hidden');
+                        if (noResults) noResults.classList.add('hidden');
                         
-                        // 로딩 표시기 숨기기
-                        loading.classList.remove('active');
+                        // 템플릿 렌더링
+                        renderTemplates(data.items);
                         
-                        // 에러 응답 처리
-                        if (data.error) {
-                            console.error('API 오류:', data.error);
-                            noResults.querySelector('h3').textContent = '오류가 발생했습니다';
-                            noResults.querySelector('p').textContent = data.error;
-                            noResults.classList.remove('hidden');
-                            pagination.innerHTML = '';
-                            return;
+                        // 페이지네이션 업데이트
+                        updatePagination(currentPage, Math.ceil(data.totalCount / perPage));
+                        
+                        // 검색 결과 메시지 업데이트
+                        const resultCount = document.getElementById('result-count');
+                        if (resultCount) {
+                            resultCount.textContent = `${data.totalCount}`;
+                            document.getElementById('search-summary').classList.remove('hidden');
                         }
                         
-                        // 결과 처리
-                        const templates = data.items || [];
-                        const totalCount = data.totalCount || 0;
-                        
-                        // 검색 결과가 없는 경우
-                        if (!templates.length) {
-                            noResults.classList.remove('hidden');
-                            pagination.innerHTML = '';
-                            return;
-                        }
-                        
-                        // 검색 결과 표시
+                        // 검색 결과 및 페이지네이션 표시
                         searchResults.classList.remove('hidden');
-                        renderTemplates(templates);
+                        document.getElementById('pagination').classList.remove('hidden');
                         
-                        // 페이지네이션 설정
-                        totalPages = Math.ceil(totalCount / 12);
-                        renderPagination();
-                    })
-                    .catch(error => {
-                        // 타임아웃 취소
-                        clearTimeout(timeoutId);
+                        // 로딩 상태 즉시 비활성화
+                        hideLoading();
+                    } else {
+                        // 검색 결과 없음
+                        if (initialMessage) initialMessage.classList.add('hidden');
+                        if (noResults) noResults.classList.remove('hidden');
                         
-                        console.error('API 호출 오류:', error);
-                        loading.classList.remove('active');
-                        noResults.querySelector('h3').textContent = '오류가 발생했습니다';
-                        noResults.querySelector('p').textContent = '서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.';
-                        noResults.classList.remove('hidden');
-                    });
+                        // 검색 결과 및 페이지네이션 숨기기
+                        searchResults.classList.add('hidden');
+                        document.getElementById('pagination').classList.add('hidden');
+                        document.getElementById('search-summary').classList.add('hidden');
+                        
+                        // 로딩 상태 즉시 비활성화
+                        hideLoading();
+                    }
+                    
+                } catch (error) {
+                    console.error('API 요청 중 오류 발생:', error);
+                    
+                    // 로딩 타임아웃 취소
+                    clearTimeout(loadingTimeout);
+                    
+                    // 오류 메시지 표시
+                    if (initialMessage) initialMessage.classList.add('hidden');
+                    if (noResults) noResults.classList.remove('hidden');
+                    noResults.innerHTML = `<div class="text-center py-10 text-red-500">오류가 발생했습니다: ${error.message}</div>`;
+                    
+                    // 검색 결과 및 페이지네이션 숨기기
+                    searchResults.classList.add('hidden');
+                    document.getElementById('pagination').classList.add('hidden');
+                    document.getElementById('search-summary').classList.add('hidden');
+                    
+                    // 로딩 상태 즉시 비활성화
+                    hideLoading();
+                }
             }
             
             // 템플릿 렌더링
             function renderTemplates(templates) {
                 searchResults.innerHTML = '';
                 
-                templates.forEach(template => {
-                    const templateCard = document.createElement('div');
-                    templateCard.className = 'template-card h-full';
+                if (templates.length === 0) {
+                    searchResults.innerHTML = '<div class="text-center py-10 text-muted-foreground">검색 결과가 없습니다.</div>';
+                    return;
+                }
+                
+                templates.forEach((template, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'bg-card rounded-lg border shadow-sm hover-lift theme-transition fade-in';
+                    cardElement.style.animationDelay = `${index * 50}ms`;
                     
-                    const date = template.date ? new Date(template.date).toLocaleDateString('ko-KR') : '날짜 정보 없음';
-                    const ministry = template.ministry || '부처 정보 없음';
-                    const title = template.title || '제목 없음';
-                    
-                    // 표를 제거하고 텍스트 위주로 요약
-                    let description = template.description || '내용 없음';
-                    if (description.includes('<table') || description.includes('</table>')) {
-                        // 표 태그 제거
-                        description = description.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, '표 내용 생략...');
-                    }
-                    
-                    // HTML 태그 제거하여 순수 텍스트만 표시
+                    // 표 태그 제거 및 텍스트 추출
                     const tempElement = document.createElement('div');
-                    tempElement.innerHTML = description;
-                    description = tempElement.textContent || tempElement.innerText || '내용 없음';
+                    tempElement.innerHTML = template.desc || template.content || template.description || '';
                     
-                    // 텍스트가 너무 길면 자르기
-                    if (description.length > 150) {
-                        description = description.substring(0, 147) + '...';
+                    // 표 태그 포함 여부 확인 및 처리
+                    const hasTables = tempElement.querySelectorAll('table').length > 0;
+                    let cleanDescription = '';
+                    
+                    if (hasTables) {
+                        cleanDescription = '표 내용 생략... ';
+                        const textNodes = Array.from(tempElement.childNodes)
+                            .filter(node => node.nodeName !== 'TABLE')
+                            .map(node => node.textContent.trim())
+                            .filter(text => text.length > 0);
+                        cleanDescription += textNodes.join(' ');
+                    } else {
+                        cleanDescription = tempElement.textContent.trim();
                     }
                     
-                    templateCard.innerHTML = `
+                    // 텍스트 길이 제한
+                    if (cleanDescription.length > 150) {
+                        cleanDescription = cleanDescription.substring(0, 150) + '...';
+                    }
+                    
+                    cardElement.innerHTML = `
                         <div class="p-4 flex flex-col h-full">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="badge badge-primary">${template.docType || '문서'}</span>
-                                <span class="text-muted-foreground text-sm">${date}</span>
+                                <span class="badge badge-primary theme-transition">${template.docType || '문서'}</span>
+                                <span class="text-muted-foreground text-sm">${template.date ? new Date(template.date).toLocaleDateString('ko-KR') : '날짜 정보 없음'}</span>
                             </div>
-                            <h3 class="text-md font-semibold text-card-foreground mb-2 line-clamp-2 cursor-pointer hover:text-primary transition-colors">${title}</h3>
-                            <p class="text-muted-foreground text-xs mb-3 line-clamp-3 flex-grow">${description}</p>
-                            <div class="flex justify-between items-center mt-auto pt-2 border-t border-border">
-                                <span class="text-muted-foreground text-xs">${ministry}</span>
+                            <h3 class="text-md font-semibold text-card-foreground mb-2 line-clamp-2 cursor-pointer hover:text-primary transition-colors">${template.title || '제목 없음'}</h3>
+                            <p class="text-muted-foreground text-xs mb-3 line-clamp-3 flex-grow">${cleanDescription}</p>
+                            <div class="flex justify-between items-center mt-auto pt-2 border-t border-border theme-transition">
+                                <span class="text-muted-foreground text-xs">${template.ministry || '부처 정보 없음'}</span>
                                 <button class="view-template-btn text-primary hover:text-primary-focus text-xs font-medium transition-colors">
-                                    자세히 보기
+                                    <span class="relative">
+                                        자세히 보기
+                                        <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-primary group-hover:w-full transition-all"></span>
+                                    </span>
                                 </button>
                             </div>
                         </div>
                     `;
                     
                     // 템플릿 상세보기 이벤트 - 자세히 보기 버튼
-                    const viewButton = templateCard.querySelector('.view-template-btn');
+                    const viewButton = cardElement.querySelector('.view-template-btn');
                     viewButton.addEventListener('click', function() {
                         selectedTemplate = template;
                         showTemplateDetail(template);
                     });
                     
                     // 템플릿 상세보기 이벤트 - 제목 클릭
-                    const titleElement = templateCard.querySelector('h3');
+                    const titleElement = cardElement.querySelector('h3');
                     titleElement.addEventListener('click', function() {
                         selectedTemplate = template;
                         showTemplateDetail(template);
                     });
                     
-                    searchResults.appendChild(templateCard);
+                    searchResults.appendChild(cardElement);
                 });
+                
+                // 결과를 표시한 후 검색 결과 컨테이너 표시
+                searchResults.classList.remove('hidden');
             }
             
-            // 페이지네이션 렌더링
-            function renderPagination() {
+            // 페이지네이션 업데이트 함수
+            function updatePagination(currentPage, totalPages) {
+                const pagination = document.getElementById('pagination');
                 pagination.innerHTML = '';
                 
-                if (totalPages <= 1) return;
+                if (totalPages <= 1) {
+                    pagination.classList.add('hidden');
+                    return;
+                }
+                
+                pagination.classList.remove('hidden');
+                
+                // 처음 페이지로 이동 버튼
+                if (currentPage > 1) {
+                    addPaginationButton(pagination, 1, '처음', currentPage);
+                }
                 
                 // 이전 페이지 버튼
                 if (currentPage > 1) {
-                    addPaginationButton('이전', currentPage - 1);
+                    addPaginationButton(pagination, currentPage - 1, '이전', currentPage);
                 }
                 
                 // 페이지 번호 버튼
-                const startPage = Math.max(1, currentPage - 2);
-                const endPage = Math.min(totalPages, startPage + 4);
+                const maxPageButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+                
+                if (endPage - startPage + 1 < maxPageButtons) {
+                    startPage = Math.max(1, endPage - maxPageButtons + 1);
+                }
                 
                 for (let i = startPage; i <= endPage; i++) {
-                    addPaginationButton(i.toString(), i, i === currentPage);
+                    addPaginationButton(pagination, i, i.toString(), currentPage);
                 }
                 
                 // 다음 페이지 버튼
                 if (currentPage < totalPages) {
-                    addPaginationButton('다음', currentPage + 1);
+                    addPaginationButton(pagination, currentPage + 1, '다음', currentPage);
+                }
+                
+                // 마지막 페이지로 이동 버튼
+                if (currentPage < totalPages) {
+                    addPaginationButton(pagination, totalPages, '마지막', currentPage);
                 }
             }
             
-            // 페이지네이션 버튼 추가
-            function addPaginationButton(text, page, isActive = false) {
+            // 페이지네이션 버튼 추가 함수
+            function addPaginationButton(pagination, page, text, currentPage) {
                 const button = document.createElement('button');
-                button.className = `btn ${
-                    isActive
-                        ? 'btn-primary'
-                        : 'btn-outline'
-                } text-sm min-w-[2.5rem] py-1 px-2 rounded-md`;
                 button.textContent = text;
                 
-                button.addEventListener('click', function() {
-                    if (currentPage !== page) {
-                        currentPage = page;
-                        // 페이지네이션 클릭 시 먼저 로딩 표시기가 보이는지 확인하고, 보이면 숨김
-                        if (loading.classList.contains('active')) {
-                            loading.classList.remove('active');
-                        }
-                        fetchTemplates();
+                // 기본 버튼 스타일
+                button.className = 'px-3 py-2 rounded text-sm transition-colors';
+                
+                // 현재 페이지인 경우 더 강조된 스타일 적용
+                if (page === currentPage) {
+                    button.classList.add('bg-primary', 'text-primary-foreground', 'font-medium', 'shadow-md', 'transform', 'scale-110');
+                    button.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                    button.style.fontWeight = '600';
+                } else {
+                    button.classList.add('hover:bg-muted', 'text-muted-foreground', 'hover:text-card-foreground');
+                }
+                
+                button.addEventListener('click', () => {
+                    if (page !== currentPage) {
+                        // 로딩 상태 리셋
+                        const loading = document.getElementById('loading');
+                        loading.classList.remove('active', 'complete');
+                        
+                        // 페이지 전환 시 약간의 지연으로 DOM 업데이트 보장
+                        setTimeout(() => {
+                            fetchTemplates(page);
+                        }, 50);
                     }
                 });
                 
@@ -835,19 +998,19 @@
             
             // 템플릿 상세 정보 표시
             function showTemplateDetail(template) {
+                // 모달 내용 설정
                 modalTitle.textContent = template.title || '제목 없음';
                 
                 const date = template.date
                     ? new Date(template.date).toLocaleDateString('ko-KR')
                     : '날짜 정보 없음';
                 
-                // 문서 유형 별로 표시할 정보 구성
-                let infoHTML = '';
-                
                 // 문서 유형 확인 (API에서 반환하는 docType 사용)
                 const docType = template.docType || '';
                 
-                // 문서 유형 별 메타 정보 구성
+                // 문서 유형별 메타 정보 구성
+                let infoHTML = '';
+                
                 if (docType.includes('보도자료')) {
                     infoHTML = `
                         <div>
@@ -917,8 +1080,7 @@
                         </div>
                     `;
                 } else if (docType.includes('회의') || docType.includes('행사계획')) {
-                    infoHTML = `
-                        <div>
+                    infoHTML = `                        <div>
                             <dt class="text-sm font-medium text-muted-foreground">일자</dt>
                             <dd class="text-sm text-card-foreground">${date}</dd>
                         </div>
@@ -957,30 +1119,82 @@
                     </div>
                 `;
                 
+                // 모달 내용 설정 및 애니메이션 적용
                 modalContent.innerHTML = `
-                    <div class="space-y-6">
+                    <div class="space-y-6 fade-in">
                         <div class="flex items-center space-x-2">
                             <span class="badge badge-primary">${docType || '문서'}</span>
                             <span class="text-muted-foreground">${date}</span>
                         </div>
                         
-                        <div class="border-t border-border pt-4">
+                        <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.1s;">
                             <h3 class="text-lg font-medium text-card-foreground mb-4">문서 정보</h3>
-                            <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 bg-muted p-4 rounded-lg">
+                            <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 bg-muted p-4 rounded-lg theme-transition">
                                 ${infoHTML}
                             </dl>
                         </div>
                         
-                        <div class="border-t border-border pt-4">
+                        <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.2s;">
                             <h3 class="text-lg font-medium text-card-foreground mb-4">내용</h3>
-                            <div class="prose max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg">
-                                ${template.content || template.description || '내용 정보가 없습니다.'}
+                            <div class="prose max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition">
+                                ${formatContent(template.content || template.description || '내용 정보가 없습니다.')}
                             </div>
                         </div>
                     </div>
                 `;
                 
+                // 모달 표시 애니메이션
+                templateModal.style.opacity = '0';
                 templateModal.classList.remove('hidden');
+                
+                // 모달 페이드 인 효과
+                setTimeout(() => {
+                    templateModal.style.opacity = '1';
+                    templateModal.style.transition = 'opacity 0.3s ease-in-out';
+                }, 10);
+                
+                // 모달 닫기 이벤트: 페이드 아웃 후 숨김
+                closeModal.onclick = function() {
+                    templateModal.style.opacity = '0';
+                    setTimeout(() => {
+                        templateModal.classList.add('hidden');
+                    }, 300);
+                };
+                
+                // 모달 외부 클릭 시 닫기
+                templateModal.addEventListener('click', function(e) {
+                    if (e.target === templateModal) {
+                        templateModal.style.opacity = '0';
+                        setTimeout(() => {
+                            templateModal.classList.add('hidden');
+                        }, 300);
+                    }
+                });
+            }
+            
+            // 내용의 줄바꿈과 포맷을 처리하는 함수
+            function formatContent(content) {
+                if (!content) return '';
+                
+                // HTML 콘텐츠인지 확인
+                const containsHTML = /<[a-z][\s\S]*>/i.test(content);
+                
+                if (containsHTML) {
+                    // HTML이 포함된 경우 줄바꿈 및 형식 유지
+                    let formattedContent = content;
+                    
+                    // 카드 내용과 달리 상세 화면에서는 테이블을 유지함
+                    // 빈 줄 제거 및 단락 처리
+                    formattedContent = formattedContent.replace(/<p>\s*<\/p>/g, '');
+                    
+                    return formattedContent;
+                } else {
+                    // 일반 텍스트인 경우 줄바꿈 처리
+                    return content.split('\n').map(line => {
+                        // 빈 줄이면 <br> 추가
+                        return line.trim() === '' ? '<br>' : `<p>${line}</p>`;
+                    }).join('');
+                }
             }
         });
     </script>

@@ -14,6 +14,68 @@
         body {
             font-family: 'Noto Sans KR', sans-serif;
         }
+        
+        /* 콘텐츠 영역 스타일 */
+        .content-area {
+            white-space: pre-wrap !important;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.8;
+        }
+        
+        .content-area p {
+            margin-bottom: 16px;
+            white-space: pre-wrap !important;
+        }
+        
+        .content-area br {
+            display: block;
+            content: "";
+            margin-top: 8px;
+        }
+
+        /* 구조적 텍스트 포맷 스타일 */
+        .content-area p {
+            margin-bottom: 20px;
+        }
+        .content-area .main-item {
+            font-weight: 500;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .content-area .sub-item {
+            margin-left: 20px;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .content-area .comment-item {
+            margin-left: 30px;
+            display: block;
+            font-size: 0.9em;
+            color: #555;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+        
+        /* 테이블 스타일 */
+        .content-area table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .content-area th, .content-area td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .content-area th {
+            background-color: #f1f5f9;
+            font-weight: 500;
+        }
+        .content-area tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -45,19 +107,19 @@
                         <div class="md:col-span-2">
                             <div class="mb-8">
                                 <h2 class="text-xl font-semibold text-gray-800 mb-3">개요</h2>
-                                <div id="template-summary" class="text-gray-600 leading-relaxed"></div>
+                                <div id="template-summary" class="text-gray-600 leading-relaxed content-area"></div>
                             </div>
                             
                             <div class="mb-8">
                                 <h2 class="text-xl font-semibold text-gray-800 mb-3">주요 내용</h2>
-                                <div id="template-content-main" class="prose max-w-none"></div>
+                                <div id="template-content-main" class="prose max-w-none content-area"></div>
                             </div>
                             
                             <!-- 템플릿 미리보기 -->
                             <div class="mb-8">
                                 <h2 class="text-xl font-semibold text-gray-800 mb-3">문서 미리보기</h2>
                                 <div class="border border-gray-200 rounded-lg p-6">
-                                    <div id="template-preview" class="prose max-w-none"></div>
+                                    <div id="template-preview" class="prose max-w-none content-area"></div>
                                 </div>
                             </div>
                         </div>
@@ -143,35 +205,35 @@
             fetchTemplateDetails(templateId);
             
             // 템플릿 상세 정보 가져오기 함수
-            function fetchTemplateDetails(id) {
-                // 실제로는 API 호출이 필요하지만, 현재는 예시 데이터를 사용합니다.
-                // 실제 구현 시에는 fetch()를 사용하여 API에서 데이터를 가져와야 합니다.
-                // fetch(`/api/templates/${id}`)
-                
-                // 로딩 상태 표시
-                loading.classList.remove('hidden');
-                templateContent.classList.add('hidden');
-                errorMessage.classList.add('hidden');
-                
-                // 데이터 가져오기 시뮬레이션 (지연 시간 추가)
-                setTimeout(() => {
-                    // 예시 데이터 - 실제로는 API 응답 데이터로 대체해야 함
-                    const template = {
-                        id: templateId,
-                        title: "인공지능 활용 정책 보고서",
-                        ministry: "과학기술정보통신부",
-                        docType: "정책 보고서",
-                        publishedDate: "2023-10-15",
-                        author: "디지털혁신정책과",
-                        summary: "인공지능 기술의 공공부문 활용 방안과 향후 발전 계획에 관한 정책 보고서입니다. 최신 기술 동향과 해외 사례를 바탕으로 한국형 AI 정책 방향을 제시합니다.",
-                        content: "<p>인공지능 기술은 공공부문의 혁신을 이끌 핵심 동력으로 부상하고 있습니다. 본 보고서는 국내외 인공지능 정책 현황을 분석하고, 한국 상황에 맞는 AI 활용 방안을 제시합니다.</p><h3>주요 내용</h3><ul><li>인공지능 기술 국내외 현황 분석</li><li>공공부문 인공지능 도입 사례 연구</li><li>한국형 AI 정책 프레임워크 제안</li><li>단계별 추진 전략 및 로드맵</li></ul><p>특히 행정 효율화, 민원 서비스 개선, 정책 의사결정 지원 등 다양한 영역에서 인공지능 기술을 활용하는 방안을 구체적으로 다루고 있습니다.</p>",
-                        preview: "<h1 style='text-align:center;'>인공지능 활용 정책 보고서</h1><div style='text-align:right;margin-bottom:20px;'>과학기술정보통신부</div><h2>개요</h2><p>본 보고서는 인공지능 기술의 공공부문 활용 현황과 미래 방향성을 제시합니다.</p><h2>현황 분석</h2><p>국내외 인공지능 기술 동향 및 공공부문 적용 사례를 분석합니다.</p><h2>정책 제안</h2><p>한국형 AI 정책 프레임워크와 단계별 추진 전략을 제안합니다.</p>",
-                        tags: ["인공지능", "정책", "공공서비스", "디지털 전환"]
-                    };
+            async function fetchTemplateDetails(templateId) {
+                try {
+                    loading.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                    templateContent.classList.add('hidden');
+                    
+                    // API에서 템플릿 상세 정보 가져오기
+                    const response = await fetch(`/api/templates/${templateId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('템플릿 정보를 가져오는데 실패했습니다.');
+                    }
+                    
+                    const templateData = await response.json();
+                    
+                    // API 응답 데이터를 콘솔에 출력
+                    console.log('API 응답 데이터:');
+                    console.log(JSON.stringify(templateData, null, 2));
+                    
+                    loading.classList.add('hidden');
+                    templateContent.classList.remove('hidden');
                     
                     // 성공적으로 데이터를 가져왔다면 화면에 표시
-                    displayTemplateDetails(template);
-                }, 1000);
+                    displayTemplateDetails(templateData);
+                } catch (error) {
+                    console.error('템플릿 정보를 가져오는데 실패했습니다:', error);
+                    loading.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                }
             }
             
             // 템플릿 상세 정보 표시 함수
@@ -182,13 +244,24 @@
                     return;
                 }
                 
+                // 콘솔에 템플릿 데이터를 JSON 형태로 출력
+                console.log('템플릿 상세 정보:');
+                console.log(JSON.stringify(template, null, 2));
+                
                 // 기본 정보 표시
                 document.getElementById('template-title').textContent = template.title;
-                document.getElementById('template-ministry').textContent = template.ministry;
+                document.getElementById('template-ministry').textContent = template.ministry || '미지정';
+                document.getElementById('template-doc-type').textContent = template.docType || '미지정';
+                document.getElementById('template-author').textContent = template.author || '미지정';
                 document.getElementById('template-date').textContent = new Date(template.publishedDate).toLocaleDateString('ko-KR');
-                document.getElementById('template-summary').textContent = template.summary;
-                document.getElementById('template-content-main').innerHTML = template.content;
-                document.getElementById('template-preview').innerHTML = template.preview;
+                
+                // 줄바꿈 처리를 위해 summary는 특별히 처리
+                document.getElementById('template-summary').innerHTML = 
+                    (template.summary || '').replace(/\n/g, '<br>');
+                
+                // 내용과 미리보기는 formatContent 함수 사용
+                document.getElementById('template-content-main').innerHTML = formatContent(template.content);
+                document.getElementById('template-preview').innerHTML = formatContent(template.preview);
                 
                 // 메타데이터 표시
                 document.getElementById('meta-ministry').textContent = template.ministry;
@@ -215,7 +288,78 @@
                 loading.classList.add('hidden');
                 templateContent.classList.remove('hidden');
             }
+            
+            // 내용의 줄바꿈과 포맷을 처리하는 함수
+            function formatContent(content) {
+                if (!content) return '';
+                
+                // HTML 문자열로 구성된 경우
+                if (/<[a-z][\s\S]*>/i.test(content)) {
+                    // 임시 DOM 엘리먼트를 생성하여 콘텐츠를 파싱
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = content;
+                    
+                    // 구조적 텍스트 포맷 적용
+                    return applyStructuredFormat(tempDiv.innerText);
+                } else {
+                    // 일반 텍스트에 구조적 포맷 적용
+                    return applyStructuredFormat(content);
+                }
+            }
+            
+            // 텍스트를 구조적으로 포맷팅하는 함수
+            function applyStructuredFormat(text) {
+                if (!text) return '';
+                
+                // 두 개 이상의 연속된 줄바꿈으로 단락 구분
+                const paragraphs = text.split(/\n\s*\n/);
+                let formattedContent = '';
+                
+                paragraphs.forEach(paragraph => {
+                    if (paragraph.trim() === '') {
+                        formattedContent += '<p><br></p>';
+                        return;
+                    }
+                    
+                    // 각 줄을 배열로 분리
+                    const lines = paragraph.split('\n');
+                    let formattedParagraph = '<p>';
+                    
+                    lines.forEach(line => {
+                        const trimmedLine = line.trim();
+                        
+                        // 주요 항목 (네모 기호로 시작)
+                        if (/^-\s/.test(trimmedLine) || /^•\s/.test(trimmedLine) || /^[\d]+[\.\)]\s/.test(trimmedLine)) {
+                            formattedParagraph += `<span class="main-item">□ ${trimmedLine.replace(/^-\s|^•\s|^[\d]+[\.\)]\s/, '')}</span>`;
+                        }
+                        // 하위 항목 (동그라미 기호로 시작, 들여쓰기 적용)
+                        else if (/^\s+-\s/.test(line) || /^\s+•\s/.test(line) || /^\s+[\d]+[\.\)]\s/.test(line)) {
+                            formattedParagraph += `<span class="sub-item">○ ${line.replace(/^\s+-\s|^\s+•\s|^\s+[\d]+[\.\)]\s/, '')}</span>`;
+                        }
+                        // 주석이나 참고사항 (별표로 시작, 추가 들여쓰기)
+                        else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('※')) {
+                            formattedParagraph += `<span class="comment-item">* ${trimmedLine.substring(1)}</span>`;
+                        }
+                        // 기본 텍스트 라인
+                        else {
+                            // 단락의 첫 줄이 아니거나 이전 라인이 있으면 줄바꿈 추가
+                            if (formattedParagraph !== '<p>') {
+                                formattedParagraph += '<br>';
+                            }
+                            formattedParagraph += trimmedLine;
+                        }
+                    });
+                    
+                    formattedParagraph += '</p>';
+                    formattedContent += formattedParagraph;
+                });
+                
+                // 기존의 줄바꿈 스타일을 유지하는 추가 처리
+                formattedContent = formattedContent.replace(/<span class="(main-item|sub-item|comment-item)">/g, '<br><span class="$1">');
+                
+                return formattedContent;
+            }
         });
     </script>
 </body>
-</html> 
+</html>
