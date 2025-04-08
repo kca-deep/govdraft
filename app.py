@@ -9,6 +9,7 @@ import logging
 import datetime
 import requests
 import re
+from bs4 import BeautifulSoup
 import time
 from functools import lru_cache
 from flask import Flask, render_template, request, jsonify
@@ -170,63 +171,53 @@ def calculate_token_cost(
         }
 
 
-def clean_html_content(content: str) -> str:
+def clean_html_content(html_content: str) -> str:
     """
-    HTML 태그를 제거하고 정제된 텍스트를 반환합니다.
-    정부 문서 형식(□, ○ 등)의 구조를 보존합니다.
+    BeautifulSoup를 사용하여 HTML 내용을 처리합니다.
+    <table> 태그는 유지하고, 나머지 텍스트는 줄바꿈을 반영하여 추출합니다.
 
     Args:
-        content: HTML 태그가 포함된 문자열
+        html_content: HTML 태그가 포함된 문자열
 
     Returns:
-        정제된 문자열
+        처리된 문자열 (표는 HTML, 나머지는 텍스트)
     """
-    if not content:
+    if not html_content:
         return ""
 
     try:
-        # 이미지 태그 제거
-        content = re.sub(r"<img[^>]*>", "", content)
+        soup = BeautifulSoup(html_content, "lxml")
+        output_parts = []
 
-        # 스크립트 태그 제거
-        content = re.sub(r"<script[^>]*>.*?</script>", "", content, flags=re.DOTALL)
+        # body 태그가 있으면 body의 자식들을, 없으면 전체 자식들을 순회
+        elements_to_process = soup.body.children if soup.body else soup.children
 
-        # 스타일 태그 제거
-        content = re.sub(r"<style[^>]*>.*?</style>", "", content, flags=re.DOTALL)
+        for element in elements_to_process:
+            if element.name == "table":
+                # 테이블 태그는 HTML 그대로 추가
+                output_parts.append(str(element))
+            elif hasattr(element, "get_text"):
+                # 다른 태그는 텍스트 추출 (separator='\n'으로 줄바꿈 반영 시도)
+                text = element.get_text(separator="\n", strip=True)
+                if text:  # 빈 텍스트는 추가하지 않음
+                    output_parts.append(text)
+            elif isinstance(element, str) and element.strip():
+                # 순수 텍스트 노드 처리 (공백만 있는 노드 제외)
+                output_parts.append(element.strip())
 
-        # HTML 주석 제거
-        content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
+        # 각 부분을 두 줄 바꿈으로 연결하여 최종 결과 생성
+        # 테이블과 텍스트 블록 사이에 적절한 간격을 줌
+        return "\n\n".join(output_parts).strip()
 
-        # 줄바꿈 유지를 위한 처리 (br 태그를 줄바꿈으로 변환)
-        content = re.sub(r"<br\s*/?>", "\n", content)
-
-        # 단락 태그를 줄바꿈으로 변환
-        content = re.sub(r"<p[^>]*>", "", content)
-        content = re.sub(r"</p>", "\n\n", content)
-
-        # 표 처리 (간단한 처리)
-        content = re.sub(r"<tr[^>]*>", "\n", content)
-        content = re.sub(r"<td[^>]*>", " ", content)
-
-        # 다른 HTML 태그 제거 (줄바꿈 정보 유지)
-        content = re.sub(r"<[^>]*>", "", content)
-
-        # 특수 기호 (□, ○) 앞뒤에 공백 확인
-        content = re.sub(r"([□○])([^\s])", r"\1 \2", content)
-
-        # 연속된 공백 처리 (줄바꿈은 유지)
-        content = re.sub(r"[ \t]+", " ", content)
-
-        # 빈 줄 여러 개를 최대 2개로 제한
-        content = re.sub(r"\n{3,}", "\n\n", content)
-
-        # JSX 스타일 주석 제거 (예: {/* ... */})
-        content = re.sub(r'\{\s*/\*\s*.*?\s*\*/\s*\}', '', content)
-
-        return content.strip()
     except Exception as e:
-        logger.error(f"HTML 정제 중 오류: {str(e)}")
-        return content
+        logger.error(f"BeautifulSoup HTML 처리 중 오류: {str(e)}")
+        # 오류 발생 시 원본 반환 또는 기본 텍스트 추출 시도
+        try:
+            # 기본적인 텍스트 추출 시도
+            soup = BeautifulSoup(html_content, "lxml")
+            return soup.get_text(separator="\n", strip=True)
+        except Exception:
+            return html_content  # 이것도 실패하면 원본 반환
 
 
 def get_preview_content(text, max_length=500):
