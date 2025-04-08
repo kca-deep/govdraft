@@ -568,16 +568,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/api/templates")
-def api_templates_redirect():
-    """
-    /api/templates 요청을 /search로 리디렉션
-    브라우저 캐시나 이전 코드로 인해 발생하는 요청을 올바른 엔드포인트로 처리
-    """
-    # 요청 파라미터 그대로 전달
-    return search_templates()
-
-
 @app.route("/search", methods=["GET"])
 def search_templates():
     """템플릿 검색 API"""
@@ -594,7 +584,7 @@ def search_templates():
     )
 
     # 캐시 키 생성
-    cache_key = f"{keyword}:{page}:{per_page}:{doc_type}:{manager}"
+    cache_key = f"{keyword}:{page}:{per_page}:{doc_type}:{manager}"  # 정렬은 클라이언트에서 하므로 캐시 키에서 제거
 
     # 캐시된 결과가 있고 캐시 사용이 활성화된 경우 캐시에서 반환
     if use_cache and cache_key in template_cache:
@@ -602,7 +592,9 @@ def search_templates():
         return jsonify(template_cache[cache_key])
 
     # API 호출
-    result = fetch_government_templates(keyword, page, per_page, doc_type, manager)
+    result = fetch_government_templates(
+        keyword, page, per_page, doc_type, manager
+    )  # sort_by 인자 제거
 
     # 결과 캐싱 (오류가 없는 경우에만)
     if "error" not in result and use_cache:
@@ -611,68 +603,7 @@ def search_templates():
     return jsonify(result)
 
 
-@app.route("/api/templates/<template_id>")
-def get_template_details(template_id):
-    """템플릿 상세 정보 API"""
-    logger.info(f"템플릿 상세 정보 API 요청: 템플릿 ID={template_id}")
-
-    try:
-        # 상세 정보를 위한 API 호출
-        # 실제로는 template_id를 기반으로 특정 템플릿 정보를 가져오는 로직 필요
-        # 현재는 예시 데이터를 반환
-
-        # 캐시에서 해당 템플릿 찾기
-        for key, data in template_cache.items():
-            if "items" in data:
-                for item in data["items"]:
-                    if item.get("id") == template_id:
-                        # 템플릿 데이터 반환 전 내용 포맷팅
-                        item["publishedDate"] = item.get(
-                            "date", datetime.datetime.now().isoformat()
-                        )
-                        item["author"] = item.get("manager", "") or item.get(
-                            "person", ""
-                        )
-                        item["ministry"] = item.get("ministry", "")
-                        item["docType"] = item.get("docType", "")
-                        item["summary"] = get_preview_content(
-                            item.get("description", ""), 200
-                        )
-                        item["content"] = item.get("content", "")
-                        item["preview"] = item.get("content", "")
-                        item["tags"] = ["정부문서", item.get("docType", "")]
-
-                        logger.info(f"템플릿 상세 정보 반환: 템플릿 ID={template_id}")
-                        return jsonify(item)
-
-        # 템플릿을 찾지 못한 경우
-        logger.warning(f"템플릿 상세 정보를 찾을 수 없음: 템플릿 ID={template_id}")
-
-        # 예시 데이터 반환 (실제 구현 시 삭제)
-        example_template = {
-            "id": template_id,
-            "title": "예시 템플릿: " + template_id,
-            "ministry": "행정안전부",
-            "department": "디지털정부과",
-            "docType": "보도자료",
-            "date": "2025-04-07",
-            "publishedDate": "2025-04-07T12:00:00",
-            "author": "홍길동",
-            "summary": "이것은 예시 템플릿입니다. 실제 데이터가 없어 예시 데이터로 표시됩니다.",
-            "content": "# 정부 정책 추진 계획\n\n- 디지털 정부 혁신 계획\n  - 온라인 민원 서비스 개선\n  - 공공데이터 개방 확대\n  * 개인정보 보호 강화 필요\n\n- 행정 효율성 향상 방안\n  - 업무 프로세스 간소화\n  - 부처 간 협업 강화\n\n※ 본 계획은 분기별로 검토 및 수정됩니다.",
-            "preview": "# 정부 정책 추진 계획\n\n정부는 다음과 같이 디지털 정부 혁신을 추진할 계획입니다:\n\n- 디지털 정부 혁신 계획\n  - 온라인 민원 서비스 개선\n  - 공공데이터 개방 확대\n  * 개인정보 보호 강화 필요\n\n- 행정 효율성 향상 방안\n  - 업무 프로세스 간소화\n  - 부처 간 협업 강화\n\n※ 본 계획은 분기별로 검토 및 수정됩니다.",
-            "tags": ["정부문서", "보도자료", "디지털정부"],
-        }
-
-        logger.info(f"예시 템플릿 상세 정보 반환: 템플릿 ID={template_id}")
-        return jsonify(example_template)
-
-    except Exception as e:
-        logger.error(f"템플릿 상세 정보 API 오류: {str(e)}")
-        return (
-            jsonify({"error": f"템플릿 상세 정보를 가져오는데 실패했습니다: {str(e)}"}),
-            500,
-        )
+# /api/templates/<template_id> 라우트는 프론트엔드에서 처리하므로 제거됨
 
 
 @app.route("/api/token-cost", methods=["POST"])
@@ -710,15 +641,7 @@ def internal_server_error(e):
     return render_template("500.html"), 500
 
 
-@app.route("/template/<template_id>")
-def template_detail(template_id):
-    """템플릿 상세 정보 페이지"""
-    logger.info(f"템플릿 상세 정보 페이지 요청: 템플릿 ID={template_id}")
-    try:
-        return render_template("template_detail.html", template_id=template_id)
-    except Exception as e:
-        logger.error(f"템플릿 상세 페이지 로드 중 오류: {str(e)}")
-        return render_template("500.html"), 500
+# /template/<template_id> 라우트는 프론트엔드 모달 처리로 인해 제거됨
 
 
 @app.route("/api/drafts/generate", methods=["POST"])
@@ -726,28 +649,30 @@ def generate_draft():
     """선택한 템플릿을 기반으로 AI 보고서 생성 API"""
     try:
         data = request.get_json()
-        
+
         if not data:
             logger.error("API 요청 본문이 비어 있음")
             return jsonify({"error": "요청 본문이 비어 있습니다."}), 400
-        
+
         template_ids = data.get("template_ids", [])
         user_input = data.get("user_input", "")
-        
-        logger.info(f"보고서 생성 요청: 템플릿 ID={template_ids}, 입력 길이={len(user_input)}자")
-        
+
+        logger.info(
+            f"보고서 생성 요청: 템플릿 ID={template_ids}, 입력 길이={len(user_input)}자"
+        )
+
         # 필수 데이터 검증
         if not template_ids:
             logger.error("템플릿 ID가 제공되지 않음")
             return jsonify({"error": "템플릿 ID가 필요합니다."}), 400
-        
+
         if not user_input:
             logger.error("사용자 입력이 제공되지 않음")
             return jsonify({"error": "보고서 정보가 필요합니다."}), 400
-        
+
         # 선택된 템플릿 정보 수집
         selected_templates = []
-        
+
         # 캐시된 데이터에서 템플릿 정보 찾기
         for key, data in template_cache.items():
             if "items" in data:
@@ -757,24 +682,39 @@ def generate_draft():
                         # 모든 템플릿을 찾았으면 루프 종료
                         if len(selected_templates) == len(template_ids):
                             break
-        
+
         # 캐시에서 템플릿을 찾지 못한 경우 (캐시 만료 또는 새로운 세션)
-        missing_templates = [tid for tid in template_ids if tid not in [t.get("id") for t in selected_templates]]
-        
+        missing_templates = [
+            tid
+            for tid in template_ids
+            if tid not in [t.get("id") for t in selected_templates]
+        ]
+
         if missing_templates:
             logger.warning(f"캐시에서 찾을 수 없는 템플릿: {missing_templates}")
-            return jsonify({
-                "error": "일부 템플릿 정보를 찾을 수 없습니다. 검색을 다시 실행해주세요."
-            }), 404
-        
+            return (
+                jsonify(
+                    {
+                        "error": "일부 템플릿 정보를 찾을 수 없습니다. 검색을 다시 실행해주세요."
+                    }
+                ),
+                404,
+            )
+
         # TODO: 실제 AI 모델을 통한 보고서 생성 기능 구현
         # 현재는 예시 응답 반환
-        
+
         # 입력과 템플릿 내용을 기반으로 토큰 비용 계산
         template_titles = [t.get("title", "") for t in selected_templates]
         template_contents = [t.get("content", "") for t in selected_templates]
-        
-        combined_input = user_input + "\n\n" + "\n\n".join(template_titles) + "\n\n" + "\n\n".join(template_contents[:3])  # 너무 길지 않게 처음 3개만 사용
+
+        combined_input = (
+            user_input
+            + "\n\n"
+            + "\n\n".join(template_titles)
+            + "\n\n"
+            + "\n\n".join(template_contents[:3])
+        )  # 너무 길지 않게 처음 3개만 사용
         example_output = f"""# {user_input.split(',')[0] if ',' in user_input else '보고서 제목'}
 
 ## 개요
@@ -791,10 +731,12 @@ def generate_draft():
 ## 작성일
 {datetime.datetime.now().strftime('%Y-%m-%d')}
 """
-        
+
         # 토큰 비용 계산
-        token_cost = calculate_token_cost(combined_input[:5000], example_output, "gpt-4o-mini")
-        
+        token_cost = calculate_token_cost(
+            combined_input[:5000], example_output, "gpt-4o-mini"
+        )
+
         # 응답 생성
         response = {
             "id": f"draft_{int(time.time())}",
@@ -803,12 +745,14 @@ def generate_draft():
             "user_input": user_input,
             "token_info": token_cost,
             "content": example_output,
-            "status": "success"
+            "status": "success",
         }
-        
-        logger.info(f"보고서 생성 완료: draft_id={response['id']}, 토큰={token_cost.get('total_tokens', 0)}")
+
+        logger.info(
+            f"보고서 생성 완료: draft_id={response['id']}, 토큰={token_cost.get('total_tokens', 0)}"
+        )
         return jsonify(response)
-        
+
     except Exception as e:
         logger.error(f"보고서 생성 중 오류: {str(e)}")
         return jsonify({"error": f"보고서 생성 중 오류가 발생했습니다: {str(e)}"}), 500

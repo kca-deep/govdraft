@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
     const closeModal = document.getElementById('close-modal');
-    const selectTemplate = document.getElementById('select-template');
+    // const selectTemplate = document.getElementById('select-template'); // 사용되지 않는 요소 참조 주석 처리 또는 제거
     const managerInputContainer = document.getElementById('manager-input-container');
     const managerInput = document.getElementById('manager-input');
     const managerRequired = document.getElementById('manager-required');
@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 상태 변수
     let currentPage = 1;
     let totalPages = 1;
-    let selectedTemplate = null;
-    let selectedTemplates = [];
+    // let selectedTemplate = null; // template.js 에서만 사용되므로 여기서 제거
     
     // 테마 토글 초기화
     initializeThemeToggle();
@@ -91,24 +90,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 50);
     });
     
-    // 모달 닫기
-    closeModal.addEventListener('click', function() {
+    // 템플릿 상세 모달 닫기 함수
+    function closeTemplateModalWithAnimation() {
         templateModal.style.opacity = '0';
         setTimeout(() => {
             templateModal.classList.add('hidden');
-        }, 300);
-    });
-    
-    // 외부 클릭 시 모달 닫기
+            document.body.classList.remove('modal-open'); // 모달 닫을 때 body 스크롤 복원
+        }, 300); // 애니메이션 시간과 일치
+    }
+
+    // 모달 닫기 버튼 클릭 이벤트
+    closeModal.addEventListener('click', closeTemplateModalWithAnimation);
+
+    // 외부 클릭 시 모달 닫기 이벤트
     templateModal.addEventListener('click', function(e) {
         if (e.target === templateModal) {
-            templateModal.style.opacity = '0';
-            setTimeout(() => {
-                templateModal.classList.add('hidden');
-            }, 300);
+            closeTemplateModalWithAnimation();
         }
     });
-    
+
     // 보고서 관련 이벤트
     
     // 모든 선택 취소 버튼
@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 모달 표시
         reportModal.style.opacity = '0';
         reportModal.classList.remove('hidden');
+        document.body.classList.add('modal-open'); // 보고서 모달 열 때 body 스크롤 방지
         
         // 페이드 인 효과
         setTimeout(() => {
@@ -159,24 +160,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 보고서 모달 닫기 이벤트
+    // 보고서 모달 닫기 함수
     function closeReportModalWithAnimation() {
         reportModal.style.opacity = '0';
         setTimeout(() => {
             reportModal.classList.add('hidden');
-        }, 300);
+            document.body.classList.remove('modal-open'); // 보고서 모달 닫을 때 body 스크롤 복원
+            // 보고서 모달은 body 스크롤을 막지 않으므로 클래스 제거 불필요
+        }, 300); // 애니메이션 시간과 일치
     }
-    
+
+    // 보고서 모달 닫기 이벤트 리스너 통합
     closeReportModal.addEventListener('click', closeReportModalWithAnimation);
     cancelReport.addEventListener('click', closeReportModalWithAnimation);
-    
-    // 외부 클릭 시 모달 닫기
-    reportModal.addEventListener('click', function(e) {
+    reportModal.addEventListener('click', function(e) { // 외부 클릭
         if (e.target === reportModal) {
             closeReportModalWithAnimation();
         }
     });
-    
+
     // 보고서 생성 API 호출
     generateReport.addEventListener('click', async function() {
         const userInput = reportInput.value.trim();

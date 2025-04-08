@@ -14,10 +14,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body class="bg-background min-h-screen flex flex-col transition-all">
-    <!-- 테마 토글 버튼 -->
-    <div class="theme-toggle hover-lift" id="theme-toggle">
-        <i class="fas fa-moon" id="theme-icon"></i>
-    </div>
+    <!-- 기존 테마 토글 버튼 제거됨 -->
 
     <!-- 헤더 영역 -->
     <header class="main-header sticky top-0 z-10 py-4 shadow-sm">
@@ -45,6 +42,10 @@
                 <div class="flex items-center gap-4">
                     <button class="btn btn-outline">
                         <i class="fas fa-bell mr-2"></i>알림
+                    </button>
+                    <!-- 새로운 테마 토글 버튼 (아이콘 형태) -->
+                    <button id="theme-toggle" class="btn btn-ghost p-2 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 theme-transition" aria-label="테마 전환">
+                        <i class="fas fa-moon text-lg" id="theme-icon"></i>
                     </button>
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
@@ -113,16 +114,7 @@
                             </select>
                         </div>
                         
-                        <!-- 정렬 기준 -->
-                        <div class="w-full md:w-1/6">
-                            <label for="sort-by" class="label">정렬 기준</label>
-                            <select id="sort-by" name="sort" 
-                                class="select input w-full theme-transition">
-                                <option value="latest">최신순</option>
-                                <option value="oldest">오래된순</option>
-                                <option value="relevance">관련성순</option>
-                            </select>
-                        </div>
+                        <!-- 정렬 기준 제거됨 -->
                         
                         <!-- 보도자료 전용 - 담당자 입력 필드 (기본적으로 숨김) -->
                         <div id="manager-input-container" class="w-full md:w-1/6 hidden">
@@ -250,7 +242,7 @@
     </footer>
     
     <!-- 템플릿 상세 모달 -->
-    <div id="template-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
+    <div id="template-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
         <div class="bg-card rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto theme-transition relative">
             <button id="close-modal" class="absolute top-4 right-4 text-muted-foreground hover:text-card-foreground transition-colors">
                 <i class="fas fa-times text-lg"></i>
@@ -263,7 +255,7 @@
     </div>
     
     <!-- 보고서 생성 모달 -->
-    <div id="report-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
+    <div id="report-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
         <div class="bg-card rounded-lg shadow-lg w-full max-w-2xl theme-transition relative">
             <button id="close-report-modal" class="absolute top-4 right-4 text-muted-foreground hover:text-card-foreground transition-colors">
                 <i class="fas fa-times text-lg"></i>

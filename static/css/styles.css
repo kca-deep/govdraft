@@ -33,6 +33,21 @@
     --border: #334155;
     --input: #334155;
     --ring: #3b82f6;
+
+    /* Style select options for dark mode */
+    select option {
+        background-color: var(--popover);
+        color: var(--popover-foreground);
+    }
+
+    /* Dark mode specific overrides for report modal */
+    .dark #report-modal textarea::placeholder {
+        color: var(--muted-foreground); /* Use muted foreground for placeholder in dark mode */
+        opacity: 0.6; /* Adjust opacity if needed */
+    }
+    .dark #character-count { /* Target the character count span specifically */
+        color: var(--muted-foreground); /* Ensure muted foreground color in dark mode */
+    }
 }
 
 body {
@@ -59,7 +74,7 @@ body {
 .template-card.selected {
     border: 2px solid var(--primary);
     box-shadow: 0 0 0 1px var(--primary), 0 8px 16px -4px rgba(59, 130, 246, 0.3);
-    background-color: var(--primary-foreground);
+    background-color: var(--accent); /* Use accent color for selected card background in dark mode */
 }
 
 /* 커스텀 체크박스 스타일 */
@@ -186,6 +201,7 @@ body {
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
+    color: var(--card-foreground); /* Ensure text color adapts */
 }
 
 .input:focus {
@@ -209,6 +225,7 @@ body {
     line-height: 1.25rem;
     display: block;
     margin-bottom: 0.5rem;
+    color: var(--card-foreground); /* Ensure text color adapts */
 }
 
 .badge {
@@ -285,30 +302,7 @@ body {
     }
 }
 
-/* 테마 토글 버튼 */
-.theme-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--card);
-    color: var(--card-foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    z-index: 100;
-    border: 1px solid var(--border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.theme-toggle:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
+/* 기존 테마 토글 버튼 스타일 제거됨 (헤더로 이동) */
 
 /* 테마 전환 애니메이션 */
 body {
@@ -338,4 +332,47 @@ body {
 .hover-lift:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-} 
+}
+
+/* 모달 열렸을 때 body 스크롤 방지 */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Light mode modal text color overrides */
+:root #template-modal h2,
+:root #template-modal h3,
+:root #template-modal dt,
+:root #template-modal dd,
+:root #template-modal .content-area, /* content-area에도 적용 */
+:root #report-modal h2,
+:root #report-modal p,
+:root #report-modal label,
+:root #report-modal textarea {
+    color: var(--card-foreground) !important; /* 기본 텍스트 색상 강제 (우선순위 높임) */
+}
+
+:root #template-modal .text-muted-foreground, /* 기존 클래스도 명시 */
+:root #report-modal .text-muted-foreground,
+:root #template-modal dt, /* dt는 muted 색상으로 */
+:root #report-modal label { /* label도 muted 색상으로 */
+    color: var(--muted-foreground) !important; /* 보조 텍스트 색상 강제 (우선순위 높임) */
+}
+
+/* Textarea placeholder color for light mode */
+:root #report-modal textarea::placeholder {
+    color: var(--muted-foreground) !important; /* 플레이스홀더 색상 강제 */
+    opacity: 0.7; /* 약간 흐리게 */
+}
+
+/* Ensure modal background is white in light mode */
+:root #template-modal > div, /* Target the inner div */
+:root #report-modal > div {  /* Target the inner div */
+    background-color: #ffffff !important; /* Force white background in light mode */
+}
+
+/* Ensure modal background is dark in dark mode */
+.dark #template-modal > div, /* Target the inner div */
+.dark #report-modal > div {  /* Target the inner div */
+    background-color: var(--card) !important; /* Force dark card background in dark mode */
+}

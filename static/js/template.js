@@ -76,50 +76,54 @@ function renderTemplates(templates) {
             </div>
         `;
         
-        // 템플릿 상세보기 이벤트 - 자세히 보기 버튼
+        // 상세보기 이벤트 핸들러 함수
+        function handleShowDetails() {
+            selectedTemplate = template; // 전역 변수 업데이트 (필요시)
+            showTemplateDetail(template);
+        }
+
+        // 템플릿 상세보기 이벤트 연결 (버튼 및 제목)
         const viewButton = cardElement.querySelector('.view-template-btn');
-        viewButton.addEventListener('click', function() {
-            selectedTemplate = template;
-            showTemplateDetail(template);
-        });
-        
-        // 템플릿 상세보기 이벤트 - 제목 클릭
         const titleElement = cardElement.querySelector('h3');
-        titleElement.addEventListener('click', function() {
-            selectedTemplate = template;
-            showTemplateDetail(template);
-        });
+        viewButton.addEventListener('click', handleShowDetails);
+        titleElement.addEventListener('click', handleShowDetails);
         
         // 템플릿 선택 이벤트
         const checkbox = cardElement.querySelector('.template-checkbox');
-        const checkboxCustom = cardElement.querySelector('.checkbox-custom');
-        const checkIcon = cardElement.querySelector('.fa-check');
+        const checkboxCustom = cardElement.querySelector('.checkbox-custom'); // 스타일 업데이트에 필요
         
+        // 체크박스 스타일 업데이트 함수
+        function updateCheckboxStyle(isChecked) {
+            const checkIcon = checkboxCustom.querySelector('.fa-check'); // 함수 내에서 찾기
+            if (isChecked) {
+                checkboxCustom.classList.add('bg-primary', 'checked');
+                if (checkIcon) checkIcon.classList.remove('opacity-0');
+                cardElement.classList.add('selected');
+            } else {
+                checkboxCustom.classList.remove('bg-primary', 'checked');
+                if (checkIcon) checkIcon.classList.add('opacity-0');
+                cardElement.classList.remove('selected');
+            }
+        }
+
         checkbox.addEventListener('change', function() {
             if (checkbox.checked) {
                 if (selectedTemplates.length >= 5) {
-                    checkbox.checked = false;
+                    checkbox.checked = false; // 상태 변경 시도 취소
                     alert('최대 5개까지 템플릿을 선택할 수 있습니다.');
+                    // 스타일 변경 없이 종료
                     return;
                 }
-                checkboxCustom.classList.add('bg-primary', 'checked');
-                checkIcon.classList.remove('opacity-0');
-                cardElement.classList.add('selected');
+                updateCheckboxStyle(true);
                 addSelectedTemplate(template);
             } else {
-                checkboxCustom.classList.remove('bg-primary', 'checked');
-                checkIcon.classList.add('opacity-0');
-                cardElement.classList.remove('selected');
+                updateCheckboxStyle(false);
                 removeSelectedTemplate(template.id);
             }
         });
         
-        // 이미 선택된 템플릿인 경우 스타일 적용
-        if (isSelected) {
-            checkboxCustom.classList.add('bg-primary', 'checked');
-            checkIcon.classList.remove('opacity-0');
-            cardElement.classList.add('selected');
-        }
+        // 초기 로드 시 선택된 템플릿 스타일 적용
+        updateCheckboxStyle(isSelected);
         
         searchResults.appendChild(cardElement);
     });
@@ -250,117 +254,79 @@ function showTemplateDetail(template) {
     // 문서 유형 확인 (API에서 반환하는 docType 사용)
     const docType = template.docType || '';
     
-    // 문서 유형별 메타 정보 구성
-    let infoHTML = '';
-    
-    if (docType.includes('보도자료')) {
-        infoHTML = `
+    // 문서 유형별 메타 정보 필드 정의
+    const metaFieldsConfig = {
+        '보도자료': [
+            { label: '발행 부처', key: 'ministry' },
+            { label: '발행 부서', key: 'department' },
+            { label: '담당자', key: 'manager' },
+            { label: '보도일자', key: 'date', isDate: true }, // 날짜 형식 적용 플래그
+            { label: '보도시점', key: 'time' }
+        ],
+        '연설문': [
+            { label: '연설자', key: 'person' },
+            { label: '연설 장소', key: 'place' },
+            { label: '연설일', key: 'date', isDate: true }
+        ],
+        '발간사': [
+            { label: '작성자', key: 'person' },
+            { label: '발간일', key: 'date', isDate: true }
+        ],
+        '정책보고서': [
+            { label: '발행 부처', key: 'ministry' },
+            { label: '발행 부서', key: 'department' },
+            { label: '담당자', key: 'manager' },
+            { label: '작성일', key: 'date', isDate: true }
+        ],
+        '회의': [ // '회의/행사계획'을 포함
+            { label: '일자', key: 'date', isDate: true },
+            { label: '장소', key: 'place' },
+            { label: '참석자', key: 'person' }
+        ],
+        '행사계획': [ // '회의/행사계획'을 포함
+            { label: '일자', key: 'date', isDate: true },
+            { label: '장소', key: 'place' },
+            { label: '참석자', key: 'person' }
+        ],
+        'default': [ // 일치하는 유형이 없을 때 기본값
+            { label: '문서 유형', key: 'docType' },
+            { label: '날짜', key: 'date', isDate: true },
+            { label: '문서 ID', key: 'id' }
+        ]
+    };
+
+    // 현재 문서 유형에 맞는 필드 설정 가져오기
+    let currentFields = metaFieldsConfig['default']; // 기본값으로 시작
+    for (const typeKeyword in metaFieldsConfig) {
+        if (docType.includes(typeKeyword)) {
+            currentFields = metaFieldsConfig[typeKeyword];
+            break; // 첫 번째 일치하는 유형 사용
+        }
+    }
+
+    // infoHTML 생성
+    let infoHTML = currentFields.map(field => {
+        let value = template[field.key] || '정보 없음';
+        if (field.isDate && value !== '정보 없음') {
+            value = date; // 미리 계산된 날짜 형식 사용
+        }
+        return `
             <div>
-                <dt class="text-sm font-medium text-muted-foreground">발행 부처</dt>
-                <dd class="text-sm text-card-foreground">${template.ministry || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">발행 부서</dt>
-                <dd class="text-sm text-card-foreground">${template.department || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">담당자</dt>
-                <dd class="text-sm text-card-foreground">${template.manager || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">보도일자</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">보도시점</dt>
-                <dd class="text-sm text-card-foreground">${template.time || '정보 없음'}</dd>
-            </div>
-        `;
-    } else if (docType.includes('연설문')) {
-        infoHTML = `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">연설자</dt>
-                <dd class="text-sm text-card-foreground">${template.person || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">연설 장소</dt>
-                <dd class="text-sm text-card-foreground">${template.place || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">연설일</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
-            </div>
-        `;
-    } else if (docType.includes('발간사')) {
-        infoHTML = `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">작성자</dt>
-                <dd class="text-sm text-card-foreground">${template.person || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">발간일</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
-            </div>
-        `;
-    } else if (docType.includes('정책보고서')) {
-        infoHTML = `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">발행 부처</dt>
-                <dd class="text-sm text-card-foreground">${template.ministry || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">발행 부서</dt>
-                <dd class="text-sm text-card-foreground">${template.department || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">담당자</dt>
-                <dd class="text-sm text-card-foreground">${template.manager || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">작성일</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
+                <dt class="text-sm font-medium text-muted-foreground">${field.label}</dt>
+                <dd class="text-sm text-card-foreground">${value}</dd>
             </div>
         `;
-    } else if (docType.includes('회의') || docType.includes('행사계획')) {
-        infoHTML = `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">일자</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">장소</dt>
-                <dd class="text-sm text-card-foreground">${template.place || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">참석자</dt>
-                <dd class="text-sm text-card-foreground">${template.person || '정보 없음'}</dd>
-            </div>
-        `;
-    } else {
-        // 기본 정보 표시
-        infoHTML = `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">문서 유형</dt>
-                <dd class="text-sm text-card-foreground">${docType || '정보 없음'}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">날짜</dt>
-                <dd class="text-sm text-card-foreground">${date}</dd>
-            </div>
+    }).join('');
+
+    // 공통 정보인 문서 ID 추가 (currentFields에 이미 포함되지 않았다면)
+    if (!currentFields.some(field => field.key === 'id')) {
+        infoHTML += `
             <div>
                 <dt class="text-sm font-medium text-muted-foreground">문서 ID</dt>
                 <dd class="text-sm text-card-foreground">${template.id || '정보 없음'}</dd>
             </div>
         `;
     }
-    
-    // 공통 정보 추가
-    infoHTML += `
-        <div>
-            <dt class="text-sm font-medium text-muted-foreground">문서 ID</dt>
-            <dd class="text-sm text-card-foreground">${template.id || '정보 없음'}</dd>
-        </div>
-    `;
     
     // 모달 내용 설정 및 애니메이션 적용
     modalContent.innerHTML = `
@@ -379,7 +345,7 @@ function showTemplateDetail(template) {
             
             <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.2s;">
                 <h3 class="text-lg font-medium text-card-foreground mb-4">내용</h3>
-                <div class="prose max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition">
+                <div class="max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition text-card-foreground"> {/* prose 제거, text-card-foreground 추가 */}
                     ${formatContent(template.content || template.description || '내용 정보가 없습니다.')}
                 </div>
             </div>
@@ -389,6 +355,7 @@ function showTemplateDetail(template) {
     // 모달 표시 애니메이션
     templateModal.style.opacity = '0';
     templateModal.classList.remove('hidden');
+    document.body.classList.add('modal-open'); // 모달 열 때 body 스크롤 방지
     
     // 모달 페이드 인 효과
     setTimeout(() => {

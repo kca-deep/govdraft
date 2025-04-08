@@ -6,6 +6,7 @@ async function fetchTemplates(page = 1) {
     const searchInput = document.getElementById('search-input');
     const docTypeSelect = document.getElementById('doc_type');
     const managerInput = document.getElementById('manager-input');
+    // const sortBySelect = document.getElementById('sort-by'); // 정렬 기준 제거됨
     const initialMessage = document.getElementById('initial-message');
     const noResults = document.getElementById('no-results');
     const searchResults = document.getElementById('templates-container');
@@ -15,23 +16,43 @@ async function fetchTemplates(page = 1) {
     const currentPage = page;
     const perPage = 12; // 페이지당 표시할 항목 수
     
-    // 로딩 상태 활성화
-    const loading = document.getElementById('loading');
-    loading.style.display = 'flex';
-    loading.classList.add('active');
-    loading.classList.remove('complete');
-    
-    // 10초 후에 자동으로 로딩 표시 종료 (API 응답 없을 경우 대비)
-    const loadingTimeout = setTimeout(() => {
-        hideLoading();
-    }, 10000);
-    
-    // 로딩 숨김 함수
+    const loading = document.getElementById('loading'); // 로딩 요소 참조
+
+    // 로딩 시작 함수
+    function showLoading() {
+        if (!loading) return;
+        loading.style.display = 'flex';
+        loading.classList.add('active');
+        loading.classList.remove('complete');
+    }
+
+    // 로딩 종료 함수 (파일 최상단 또는 별도 모듈로 이동 가능)
     function hideLoading() {
+        if (!loading) return;
         loading.classList.remove('active');
         loading.classList.add('complete');
+        // style.display = 'none' 은 CSS의 .loading.complete 에서 처리하도록 유도 가능
+        // 여기서는 명시적으로 none 처리 유지
         loading.style.display = 'none';
     }
+
+    showLoading(); // 로딩 시작
+
+    // API 타임아웃 처리 (10초)
+    const loadingTimeout = setTimeout(() => {
+        console.warn("API 요청 시간이 초과되었습니다.");
+        hideLoading();
+        // 필요시 사용자에게 타임아웃 메시지 표시
+        const noResults = document.getElementById('no-results');
+        if (noResults) {
+             noResults.innerHTML = `<div class="text-center py-10 text-orange-500">요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.</div>`;
+             noResults.classList.remove('hidden');
+             // 다른 결과 영역 숨기기
+             document.getElementById('templates-container').classList.add('hidden');
+             document.getElementById('pagination').classList.add('hidden');
+             document.getElementById('search-summary').classList.add('hidden');
+        }
+    }, 10000);
     
     try {
         // API 요청 생성
@@ -49,11 +70,12 @@ async function fetchTemplates(page = 1) {
         if (docType === "press" && managerInput.value.trim()) {
             url += `&manager=${encodeURIComponent(managerInput.value.trim())}`;
         }
+
+        // 정렬 기준 파라미터 제거됨
         
         const response = await fetch(url);
         
-        // 로딩 타임아웃 취소
-        clearTimeout(loadingTimeout);
+        clearTimeout(loadingTimeout); // 성공 시 타임아웃 취소
         
         if (!response.ok) {
             throw new Error(`API 요청 실패: ${response.status}`);
@@ -67,7 +89,9 @@ async function fetchTemplates(page = 1) {
             if (initialMessage) initialMessage.classList.add('hidden');
             if (noResults) noResults.classList.add('hidden');
             
-            // 템플릿 렌더링
+            // 클라이언트 측 정렬 로직 제거됨
+
+            // API에서 받은 순서 그대로 템플릿 렌더링
             renderTemplates(data.items);
             
             // 페이지네이션 업데이트
@@ -84,8 +108,7 @@ async function fetchTemplates(page = 1) {
             searchResults.classList.remove('hidden');
             document.getElementById('pagination').classList.remove('hidden');
             
-            // 로딩 상태 즉시 비활성화
-            hideLoading();
+            hideLoading(); // 성공 시 로딩 종료
         } else {
             // 검색 결과 없음
             if (initialMessage) initialMessage.classList.add('hidden');
@@ -96,15 +119,13 @@ async function fetchTemplates(page = 1) {
             document.getElementById('pagination').classList.add('hidden');
             document.getElementById('search-summary').classList.add('hidden');
             
-            // 로딩 상태 즉시 비활성화
-            hideLoading();
+            hideLoading(); // 결과 없을 시 로딩 종료
         }
         
     } catch (error) {
         console.error('API 요청 중 오류 발생:', error);
         
-        // 로딩 타임아웃 취소
-        clearTimeout(loadingTimeout);
+        clearTimeout(loadingTimeout); // 오류 발생 시 타임아웃 취소
         
         // 오류 메시지 표시
         if (initialMessage) initialMessage.classList.add('hidden');
@@ -116,7 +137,6 @@ async function fetchTemplates(page = 1) {
         document.getElementById('pagination').classList.add('hidden');
         document.getElementById('search-summary').classList.add('hidden');
         
-        // 로딩 상태 즉시 비활성화
-        hideLoading();
+        hideLoading(); // 오류 발생 시 로딩 종료
     }
 } 
