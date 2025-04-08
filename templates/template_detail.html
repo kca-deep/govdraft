@@ -326,8 +326,14 @@
                     let formattedParagraph = '<p>';
                     
                     lines.forEach(line => {
-                        const trimmedLine = line.trim();
-                        
+                        let trimmedLine = line.trim(); // const를 let으로 변경하여 수정 가능하게 함
+
+                        // 문제의 주석 문자열 명시적 제거
+                        trimmedLine = trimmedLine.replace(/\{\s*\/\*\s*prose 제거,\s*text-card-foreground 추가\s*\*\/\s*\}/g, '').trim();
+
+                        // 주석 제거 후 빈 줄이면 건너뛰기
+                        if (trimmedLine === '') return;
+
                         // 주요 항목 (네모 기호로 시작)
                         if (/^-\s/.test(trimmedLine) || /^•\s/.test(trimmedLine) || /^[\d]+[\.\)]\s/.test(trimmedLine)) {
                             formattedParagraph += `<span class="main-item">□ ${trimmedLine.replace(/^-\s|^•\s|^[\d]+[\.\)]\s/, '')}</span>`;

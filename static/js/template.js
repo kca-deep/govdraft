@@ -345,7 +345,7 @@ function showTemplateDetail(template) {
             
             <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.2s;">
                 <h3 class="text-lg font-medium text-card-foreground mb-4">내용</h3>
-                <div class="max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition text-card-foreground"> {/* prose 제거, text-card-foreground 추가 */}
+                <div class="max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition text-card-foreground">
                     ${formatContent(template.content || template.description || '내용 정보가 없습니다.')}
                 </div>
             </div>

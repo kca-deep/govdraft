@@ -220,6 +220,9 @@ def clean_html_content(content: str) -> str:
         # 빈 줄 여러 개를 최대 2개로 제한
         content = re.sub(r"\n{3,}", "\n\n", content)
 
+        # JSX 스타일 주석 제거 (예: {/* ... */})
+        content = re.sub(r'\{\s*/\*\s*.*?\s*\*/\s*\}', '', content)
+
         return content.strip()
     except Exception as e:
         logger.error(f"HTML 정제 중 오류: {str(e)}")
