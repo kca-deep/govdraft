@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}정부 문서 템플릿 검색{% endblock %}
+
+{% block content %}
+<div class="mb-8 fade-in" style="animation-delay: 0.1s;">
+    <h2 class="text-3xl font-bold mb-2 text-card-foreground">정부 문서 템플릿 검색</h2>
+    <p class="text-muted-foreground">보도자료, 연설문, 정책 보고서 등 다양한 정부 문서 템플릿을 검색하고 선택하세요.</p>
+</div>
+
+<!-- 검색 폼 카드 -->
+<div class="card p-6 mb-8 fade-in hover-lift theme-transition" style="animation-delay: 0.2s;">
+    <h2 class="text-lg font-semibold mb-4 text-card-foreground">검색 조건 입력</h2>
+    
+    <form id="search-form" class="space-y-4">
+        <div class="flex flex-wrap md:flex-nowrap items-end gap-3">
+            <!-- 문서 유형 선택 (필수) -->
+            <div class="w-full md:w-1/6">
+                <label for="doc_type" class="label">문서 유형 <span class="text-destructive">*</span></label>
+                <select id="doc_type" name="doc_type" required
+                    class="select input w-full theme-transition">
+                    <option value="" disabled selected>문서 유형</option>
+                    <option value="press">보도자료</option>
+                    <option value="speech">연설문</option>
+                    <option value="publication">발간사</option>
+                    <option value="report">정책보고서</option>
+                    <option value="plan">회의/행사계획</option>
+                    <option value="all">전체 문서</option>
+                </select>
+            </div>
+            
+            <!-- 검색어 (필수) -->
+            <div class="w-full md:w-2/5 flex-grow">
+                <label for="search-input" class="label">제목 키워드 <span class="text-destructive">*</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-search text-muted-foreground"></i>
+                    </span>
+                    <input type="text" id="search-input" name="keyword" required
+                        class="input pl-10 pr-3 w-full theme-transition"
+                        placeholder="검색어를 입력하세요">
+                </div>
+            </div>
+            
+            <!-- 발행 부처 -->
+            <div class="w-full md:w-1/6">
+                <label for="ministry" class="label">발행 부처</label>
+                <select id="ministry" name="ministry" 
+                    class="select input w-full theme-transition">
+                    <option value="">모든 부처</option>
+                    <option value="행정안전부">행정안전부</option>
+                    <option value="국토교통부">국토교통부</option>
+                    <option value="교육부">교육부</option>
+                    <option value="보건복지부">보건복지부</option>
+                    <option value="과학기술정보통신부">과학기술정보통신부</option>
+                </select>
+            </div>
+            
+            <!-- 보도자료 전용 - 담당자 입력 필드 (기본적으로 숨김) -->
+            <div id="manager-input-container" class="w-full md:w-1/6 hidden">
+                <label for="manager-input" class="label">
+                    담당자 <span id="manager-required" class="text-destructive hidden">*</span>
+                </label>
+                <input type="text" id="manager-input" name="manager" 
+                    class="input w-full theme-transition"
+                    placeholder="담당자 이름">
+            </div>
+            
+            <!-- 검색 버튼 -->
+            <div class="w-full md:w-auto">
+                <button type="submit" id="search-button" 
+                    class="btn btn-primary w-full md:w-auto h-10 aspect-square rounded-full theme-transition flex items-center justify-center hover:scale-105 hover:shadow-md transition-all">
+                    <i class="fas fa-search text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 선택된 템플릿 컨테이너 -->
+<div id="selected-templates-container" class="mb-6 hidden fade-in">
+    <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-medium">선택된 템플릿 (<span id="selected-count">0</span>/5)</h3>
+        <div class="flex space-x-2">
+            <button id="clear-selections" class="btn btn-outline py-1 px-3 text-sm">
+                <i class="fas fa-times mr-1"></i>모두 취소
+            </button>
+            <button id="generate-report-btn" class="btn btn-primary py-1 px-3 text-sm" disabled>
+                <i class="fas fa-file-alt mr-1"></i>보고서 생성
+            </button>
+        </div>
+    </div>
+    <div id="selected-templates" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-2"></div>
+</div>
+
+<!-- 검색 안내 메시지 (초기 상태) -->
+<div id="initial-message" class="flex flex-col items-center justify-center py-16 text-center fade-in" style="animation-delay: 0.3s;">
+    <div class="bg-muted rounded-full p-4 mb-4 theme-transition">
+        <i class="fas fa-file-alt text-muted-foreground text-5xl"></i>
+    </div>
+    <h3 class="text-xl font-medium text-card-foreground mb-2">문서 유형과 키워드를 입력해주세요</h3>
+    <p class="text-muted-foreground">문서 유형과 키워드는 필수 입력 사항입니다.</p>
+</div>
+
+<!-- 검색 결과 요약 -->
+<div id="search-summary" class="mb-4 text-muted-foreground hidden fade-in">
+    총 <span id="result-count" class="font-semibold text-card-foreground">0</span>개의 검색 결과
+</div>
+
+<!-- 로딩 표시기 -->
+<div id="loading" class="loading flex flex-col items-center justify-center my-8 fade-in" style="display: none;">
+    <div class="relative w-12 h-12 mb-2">
+        <div class="animate-spin absolute inset-0 rounded-full border-b-2 border-primary"></div>
+        <div class="animate-ping absolute inset-0 rounded-full border border-primary opacity-25"></div>
+    </div>
+    <span class="text-base text-muted-foreground">검색 중...</span>
+</div>
+
+<!-- 검색 결과 -->
+<div id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
+
+<!-- 검색 결과 없음 메시지 -->
+<div id="no-results" class="hidden flex flex-col items-center justify-center py-16 text-center fade-in">
+    <div class="bg-muted rounded-full p-4 mb-4 theme-transition">
+        <i class="fas fa-search text-muted-foreground text-5xl"></i>
+    </div>
+    <h3 class="text-xl font-medium text-card-foreground mb-2">검색 결과가 없습니다</h3>
+    <p class="text-muted-foreground">다른 키워드로 검색하거나 필터 옵션을 변경해 보세요.</p>
+</div>
+
+<!-- 페이지네이션 -->
+<div class="flex flex-col items-center justify-center mt-8 fade-in" style="animation-delay: 0.4s;">
+    <nav class="inline-flex rounded-md shadow-sm" id="pagination">
+        <!-- 페이지네이션 버튼은 JavaScript로 동적 생성됨 -->
+    </nav>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- 템플릿 상세 모달 -->
+<div id="template-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
+    <div class="bg-card rounded-lg shadow-lg w-full max-w-4xl theme-transition max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b theme-transition">
+            <h3 class="text-lg font-medium">템플릿 상세 정보</h3>
+            <button id="close-modal" class="text-muted-foreground hover:text-card-foreground transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="overflow-y-auto flex-grow">
+            <div class="p-6">
+                <h2 id="modal-title" class="text-2xl font-bold mb-6 text-card-foreground"></h2>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 보고서 생성 모달 -->
+<div id="report-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
+    <div class="bg-card rounded-lg shadow-lg w-full max-w-2xl theme-transition relative">
+        <button id="close-report-modal" class="absolute top-4 right-4 text-muted-foreground hover:text-card-foreground transition-colors">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-4 text-card-foreground">AI 보고서 생성</h2>
+            <p class="text-muted-foreground mb-4">선택한 템플릿을 참고하여 AI가 문서를 생성합니다.</p>
+            
+            <div class="mb-4">
+                <label for="report-input" class="label">보고서 정보 입력</label>
+                <textarea id="report-input" 
+                    class="input min-h-[150px] theme-transition p-3" 
+                    placeholder="보고서 제목, 목적, 주요 내용을 입력해주세요. 예시) 제목: 2025년 디지털 정부 혁신 계획, 목적: 시민 편의성 향상을 위한 디지털 서비스 확대, 내용: 모바일 행정 서비스 강화, 데이터 개방 확대, 디지털 격차 해소 방안 등"
+                    maxlength="1000"></textarea>
+                <div class="flex justify-end mt-1">
+                    <span id="character-count" class="text-xs text-muted-foreground">0/1000</span>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button id="cancel-report" class="btn btn-outline">취소</button>
+                <button id="generate-report" class="btn btn-primary">생성하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/pagination.js"></script>
+<script src="/static/js/template.js"></script>
+<script src="/static/js/main.js"></script>
+{% endblock %} 

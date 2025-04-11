@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}정부 문서 템플릿 검색{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- shadcn UI 기본 스타일 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@radix-ui/themes@2.0.0/styles.css">
+    <!-- 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 사용자 정의 스타일 -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-background min-h-screen flex flex-col transition-all">
+    <!-- 헤더 영역 -->
+    <header class="main-header sticky top-0 z-10 py-4 shadow-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-card-foreground">정부 문서 포털</h1>
+                </div>
+                
+                <nav class="flex gap-1">
+                    <a href="#" class="nav-link active">
+                        <i class="fas fa-search mr-2"></i>템플릿 검색
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-clipboard-list mr-2"></i>템플릿 목록
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-star mr-2"></i>즐겨찾기
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-question-circle mr-2"></i>도움말
+                    </a>
+                </nav>
+                
+                <div class="flex items-center gap-4">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-bell mr-2"></i>알림
+                    </button>
+                    <!-- 테마 토글 버튼 (아이콘 형태) -->
+                    <button id="theme-toggle" class="btn btn-ghost p-2 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 theme-transition" aria-label="테마 전환">
+                        <i class="fas fa-moon text-lg" id="theme-icon"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="text-sm font-medium">관리자</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="flex-grow">
+        <div class="container mx-auto px-4 py-8 fade-in">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- 푸터 영역 -->
+    <footer class="border-t theme-transition py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-sm text-muted-foreground">
+                    © 2024 정부 문서 포털. 모든 권리 보유.
+                </div>
+                <div class="flex gap-4">
+                    <a href="#" class="text-sm text-muted-foreground hover:text-card-foreground theme-transition">이용약관</a>
+                    <a href="#" class="text-sm text-muted-foreground hover:text-card-foreground theme-transition">개인정보처리방침</a>
+                    <a href="#" class="text-sm text-muted-foreground hover:text-card-foreground theme-transition">API 문서</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block modals %}{% endblock %}
+    
+    <!-- 공통 JavaScript -->
+    <script src="/static/js/api.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

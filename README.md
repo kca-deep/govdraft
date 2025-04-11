@@ -74,7 +74,8 @@
 ```
 govdraft/
 ├── app.py                # 웹 애플리케이션 메인 파일
-├── templates/            # HTML 템플릿
+├── web/                  # HTML 템플릿 디렉토리
+│   ├── base.html         # 기본 레이아웃 템플릿
 │   ├── index.html        # 메인 검색 페이지
 │   ├── template_detail.html  # 템플릿 상세 페이지
 │   ├── 404.html          # 404 오류 페이지

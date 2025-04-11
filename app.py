@@ -97,7 +97,7 @@ def setup_logging():
 logger = setup_logging()
 
 # Flask 애플리케이션 초기화
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="web")
 
 
 # 모델별 가격 설정 (1K 토큰당 USD) - 캐싱 적용

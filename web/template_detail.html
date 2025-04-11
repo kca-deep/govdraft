@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}템플릿 상세 정보{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 콘텐츠 영역 스타일 */
+    .content-area {
+        white-space: pre-wrap !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.8;
+    }
+    
+    .content-area p {
+        margin-bottom: 16px;
+        white-space: pre-wrap !important;
+    }
+    
+    .content-area br {
+        display: block;
+        content: "";
+        margin-top: 8px;
+    }
+
+    /* 구조적 텍스트 포맷 스타일 */
+    .content-area p {
+        margin-bottom: 20px;
+    }
+    .content-area .main-item {
+        font-weight: 500;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .content-area .sub-item {
+        margin-left: 20px;
+        display: block;
+        margin-bottom: 3px;
+    }
+    .content-area .comment-item {
+        margin-left: 30px;
+        display: block;
+        font-size: 0.9em;
+        color: #555;
+        font-style: italic;
+        margin-bottom: 3px;
+    }
+    
+    /* 테이블 스타일 */
+    .content-area table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .content-area th, .content-area td {
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem;
+        text-align: left;
+    }
+    .content-area th {
+        background-color: #f1f5f9;
+        font-weight: 500;
+    }
+    .content-area tr:nth-child(even) {
+        background-color: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-card rounded-lg shadow-md overflow-hidden">
+    <div class="p-6">
+        <!-- 로딩 표시기 -->
+        <div id="loading" class="flex items-center justify-center my-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <span class="ml-3 text-lg text-muted-foreground">템플릿 정보를 불러오는 중...</span>
+        </div>
+        
+        <!-- 템플릿 정보 -->
+        <div id="template-content" class="hidden">
+            <header class="mb-6 flex justify-between items-start">
+                <div>
+                    <h1 id="template-title" class="text-3xl font-bold text-card-foreground mb-2"></h1>
+                    <div class="flex items-center text-muted-foreground">
+                        <span id="template-ministry" class="mr-4"></span>
+                        <span id="template-date"></span>
+                    </div>
+                </div>
+                <a href="/" class="text-primary hover:text-primary/80 flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> 목록으로 돌아가기
+                </a>
+            </header>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-card-foreground mb-3">개요</h2>
+                        <div id="template-summary" class="text-muted-foreground leading-relaxed content-area"></div>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-card-foreground mb-3">주요 내용</h2>
+                        <div id="template-content-main" class="prose max-w-none content-area"></div>
+                    </div>
+                    
+                    <!-- 템플릿 미리보기 -->
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-card-foreground mb-3">문서 미리보기</h2>
+                        <div class="border border-border rounded-lg p-6 theme-transition">
+                            <div id="template-preview" class="prose max-w-none content-area"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-1">
+                    <div class="bg-muted rounded-lg p-5 mb-6 theme-transition">
+                        <h2 class="text-lg font-medium text-card-foreground mb-4">메타데이터</h2>
+                        
+                        <div class="mb-3">
+                            <h3 class="text-sm font-medium text-card-foreground">발행 부처</h3>
+                            <p id="meta-ministry" class="text-muted-foreground"></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h3 class="text-sm font-medium text-card-foreground">문서 유형</h3>
+                            <p id="meta-doctype" class="text-muted-foreground"></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h3 class="text-sm font-medium text-card-foreground">발행일</h3>
+                            <p id="meta-date" class="text-muted-foreground"></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h3 class="text-sm font-medium text-card-foreground">작성자</h3>
+                            <p id="meta-author" class="text-muted-foreground"></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h3 class="text-sm font-medium text-card-foreground">태그</h3>
+                            <div id="meta-tags" class="flex flex-wrap gap-2 mt-1"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="rounded-lg border border-primary/20 bg-primary/5 p-5 theme-transition">
+                        <h2 class="text-lg font-medium text-primary mb-4">템플릿 설정</h2>
+                        
+                        <div class="space-y-4">
+                            <button id="use-template" class="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                                이 템플릿 사용하기
+                            </button>
+                            
+                            <button id="download-template" class="w-full bg-background border border-primary hover:bg-primary/5 text-primary font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out theme-transition">
+                                템플릿 다운로드
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 에러 메시지 -->
+        <div id="error-message" class="hidden flex flex-col items-center justify-center py-16 text-center">
+            <i class="fas fa-exclamation-circle text-destructive text-5xl mb-4"></i>
+            <h3 class="text-xl font-medium text-card-foreground mb-2">템플릿을 찾을 수 없습니다</h3>
+            <p class="text-muted-foreground">요청하신 템플릿 정보를 찾지 못했습니다.</p>
+            <a href="/" class="mt-4 text-primary hover:text-primary/80">목록으로 돌아가기</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const templateId = '{{ template_id }}';
+        const loading = document.getElementById('loading');
+        const templateContent = document.getElementById('template-content');
+        const errorMessage = document.getElementById('error-message');
+        
+        // 사용 버튼 이벤트 리스너
+        document.getElementById('use-template').addEventListener('click', function() {
+            alert('이 템플릿이 선택되었습니다.');
+            // 여기에 템플릿 사용 로직 추가
+        });
+        
+        // 다운로드 버튼 이벤트 리스너
+        document.getElementById('download-template').addEventListener('click', function() {
+            alert('템플릿 다운로드를 시작합니다.');
+            // 여기에 다운로드 로직 추가
+        });
+        
+        // 템플릿 데이터 가져오기 (API 호출 시뮬레이션)
+        setTimeout(function() {
+            // 데이터 가져오기 성공 시뮬레이션
+            const mockData = {
+                id: templateId,
+                title: '2024년도 정부혁신 실행계획',
+                ministry: '행정안전부',
+                department: '정부혁신기획과',
+                date: '2024-05-10',
+                author: '김혁신',
+                docType: '정책보고서',
+                tags: ['정부혁신', '국민참여', '디지털정부', '투명행정'],
+                summary: '본 실행계획은 정부혁신을 통한 투명하고 효율적인 정부 구현을 위해 수립되었습니다. 국민과 함께하는 참여형 행정체계 구축과 디지털 기술을 활용한 행정 서비스 고도화를 중점적으로 추진합니다.',
+                content: `1. 추진 배경
+   □ 국민의 정부에 대한 신뢰도 제고 필요성 증가
+      ○ 행정 서비스 만족도 조사 결과 전년 대비 5% 하락
+      ○ 정책 결정 과정에 국민 참여 요구 증가
+
+   □ 디지털 전환 가속화에 따른 행정 서비스 혁신 필요
+      ○ 비대면 서비스 수요 급증으로 온라인 플랫폼 확대 필요
+      ○ AI, 빅데이터 등 신기술 활용한 맞춤형 서비스 요구
+
+2. 추진 방향 및 전략
+   □ 국민 참여형 정책 결정 체계 강화
+      ○ 정책 제안 플랫폼 고도화 및 참여 채널 다양화
+      ○ 주요 정책 결정 과정에 시민참여단 운영 확대
+
+   □ 디지털 기반 행정 서비스 혁신
+      ○ 모바일 기반 통합 행정 서비스 플랫폼 구축
+      ○ AI 기반 맞춤형 서비스 제공 시스템 도입
+
+   □ 공공데이터 개방 및 활용 확대
+      ○ 국민 관심 고수요 데이터 우선 개방
+      ○ 민간-공공 데이터 융합 활용 지원
+
+3. 세부 추진 과제
+   □ 국민 참여 플랫폼 '국민과 함께' 고도화
+      ○ 모바일 접근성 강화 및 UI/UX 개선
+      ○ 제안-토론-결정-평가 전주기 관리 시스템 도입
+      
+   □ 데이터 기반 과학행정 체계 구축
+      ○ 부처 간 칸막이 없는 데이터 공유 체계 마련
+      ○ 빅데이터 분석 기반 정책 의사결정 지원 시스템 구축
+      
+   □ 디지털 서비스 통합 제공 체계 마련
+      ○ 모바일 신분증 도입 및 활용 확대
+      ○ 마이데이터 기반 원스톱 행정 서비스 제공
+
+4. 기대 효과
+   □ 정부 신뢰도 10% 향상
+   □ 행정 서비스 만족도 15% 증가
+   □ 국민 참여 정책 제안 30% 증가
+   □ 디지털 행정 서비스 이용률 25% 확대`,
+                preview: `정책보고서
+
+문서번호: 행안부-혁신-2024-057
+발행일자: 2024년 5월 10일
+담당부서: 행정안전부 정부혁신기획과
+
+======================
+
+2024년도 정부혁신 실행계획
+
+- 국민과 함께하는 투명하고 효율적인 정부 구현 -
+
+행정안전부
+
+======================
+
+[요 약]
+
+본 실행계획은 국민의 정부에 대한 신뢰 회복과 디지털 전환 시대에 부응하는 행정 서비스 제공을 위해 수립되었다. 주요 내용으로는 국민 참여형 정책 결정 체계 강화, 디지털 기반 행정 서비스 혁신, 공공데이터 개방 및 활용 확대 등이 포함된다. 이를 통해 정부 신뢰도와 행정 서비스 만족도를 제고하고, 국민 참여 확대와 디지털 행정 서비스 이용 활성화를 도모하고자 한다.`
+            };
+            
+            // 데이터를 템플릿에 채우기
+            document.getElementById('template-title').textContent = mockData.title;
+            document.getElementById('template-ministry').textContent = mockData.ministry;
+            document.getElementById('template-date').textContent = mockData.date;
+            document.getElementById('template-summary').textContent = mockData.summary;
+            document.getElementById('template-content-main').textContent = mockData.content;
+            document.getElementById('template-preview').textContent = mockData.preview;
+            
+            document.getElementById('meta-ministry').textContent = mockData.ministry;
+            document.getElementById('meta-doctype').textContent = mockData.docType;
+            document.getElementById('meta-date').textContent = mockData.date;
+            document.getElementById('meta-author').textContent = mockData.author;
+            
+            // 태그 렌더링
+            const tagsContainer = document.getElementById('meta-tags');
+            mockData.tags.forEach(tag => {
+                const tagElem = document.createElement('span');
+                tagElem.className = 'px-2 py-1 bg-primary/10 text-primary text-xs rounded-full';
+                tagElem.textContent = tag;
+                tagsContainer.appendChild(tagElem);
+            });
+            
+            // 로딩 숨기고 컨텐츠 표시
+            loading.classList.add('hidden');
+            templateContent.classList.remove('hidden');
+        }, 1500);
+    });
+</script>
+{% endblock %}
