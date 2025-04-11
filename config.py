@@ -5,9 +5,13 @@
 
 import os
 from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
 
 # 환경 변수 로드
 load_dotenv()
+
+# 공통 SQLAlchemy 객체 초기화
+db = SQLAlchemy()
 
 
 class Config:
@@ -21,6 +25,11 @@ class Config:
     PUBLIC_DATA_API_KEY = os.getenv("PUBLIC_DATA_API_KEY")
     PORT = int(os.getenv("PORT", 5000))
     DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+
+    # 데이터베이스 설정
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///govdraft.db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-key-change-in-production")
 
     # 문서 유형별 엔드포인트와 필수 파라미터 정의
     DOC_TYPE_CONFIG = {

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}내 프로필 - KCA 문서 포털{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6">내 프로필</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="p-4 mb-4 rounded-md {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 p-6 rounded-lg">
+            <h2 class="text-lg font-semibold mb-4">계정 정보</h2>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">아이디</p>
+                <p class="font-medium">{{ current_user.username }}</p>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">이름</p>
+                <p class="font-medium">{{ current_user.full_name }}</p>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">이메일</p>
+                <p class="font-medium">{{ current_user.email }}</p>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">가입일</p>
+                <p class="font-medium">{{ current_user.created_at.strftime('%Y년 %m월 %d일') }}</p>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">마지막 로그인</p>
+                <p class="font-medium">
+                    {% if current_user.last_login %}
+                        {{ current_user.last_login.strftime('%Y년 %m월 %d일 %H:%M') }}
+                    {% else %}
+                        정보 없음
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-6 rounded-lg">
+            <h2 class="text-lg font-semibold mb-4">활동 정보</h2>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">작성한 보고서</p>
+                <p class="font-medium">0개</p>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">저장한 템플릿</p>
+                <p class="font-medium">0개</p>
+            </div>
+            
+            <div class="mt-8">
+                <a href="{{ url_for('member.change_password') }}" class="text-blue-600 hover:underline">비밀번호 변경</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-8 flex justify-end">
+        <a href="{{ url_for('main.index') }}" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-800 transition duration-300 mr-2">
+            메인으로
+        </a>
+        <a href="{{ url_for('member.logout') }}" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-white transition duration-300">
+            로그아웃
+        </a>
+    </div>
+    
+    <div class="mt-10 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-red-600 mb-4">계정 관리</h3>
+        <p class="text-gray-600 mb-4">
+            계정을 비활성화하면 사이트에서 로그아웃되며 다시 로그인할 수 없게 됩니다. 계정을 다시 활성화하려면 관리자에게 문의해야 합니다.
+        </p>
+        <form method="POST" action="{{ url_for('member.deactivate_account') }}" onsubmit="return confirm('정말로 계정을 비활성화하시겠습니까? 이 작업은 취소할 수 없습니다.');">
+            <button type="submit" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded-md transition duration-300">
+                계정 비활성화
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

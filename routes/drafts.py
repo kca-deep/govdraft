@@ -5,7 +5,7 @@ AI 보고서 생성 관련 API 엔드포인트를 처리합니다.
 
 import time
 import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from routes.main import get_template_cache
 from utils.token_utils import calculate_token_cost
 from utils.logging import logger
@@ -18,6 +18,11 @@ drafts_bp = Blueprint("drafts", __name__)
 def generate_draft():
     """선택한 템플릿을 기반으로 AI 보고서 생성 API"""
     try:
+        # 요청 본문 검증
+        if not request.is_json:
+            logger.error("API 요청이 JSON 형식이 아님")
+            return jsonify({"error": "요청은 JSON 형식이어야 합니다."}), 400
+
         data = request.get_json()
 
         if not data:
@@ -43,6 +48,17 @@ def generate_draft():
         # 선택된 템플릿 정보 수집
         selected_templates = []
         template_cache = get_template_cache()
+
+        if not template_cache:
+            logger.error("템플릿 캐시가 비어 있음")
+            return (
+                jsonify(
+                    {
+                        "error": "템플릿 정보를 찾을 수 없습니다. 먼저 검색을 실행해주세요."
+                    }
+                ),
+                404,
+            )
 
         # 캐시된 데이터에서 템플릿 정보 찾기
         for key, data in template_cache.items():

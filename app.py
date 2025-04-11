@@ -4,9 +4,13 @@
 """
 
 from flask import Flask
-from config import Config
+from flask_login import LoginManager
+from flask_cors import CORS
+from config import Config, db
 from routes import register_routes
 from utils.logging import logger
+from routes.member import User
+import os
 
 
 def create_app(config_class=Config):
@@ -19,8 +23,32 @@ def create_app(config_class=Config):
         static_url_path="/static",
     )
 
+    # 설정 적용
+    app.config.from_object(config_class)
+
+    # CORS 설정
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+    # 데이터베이스 초기화
+    db.init_app(app)
+
+    # Flask-Login 설정
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = "member.login"
+    login_manager.login_message = "이 페이지에 접근하려면 로그인이 필요합니다."
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     # 라우트 등록
     register_routes(app)
+
+    # 데이터베이스 생성
+    with app.app_context():
+        db.create_all()
+        logger.info("데이터베이스 테이블 생성 완료")
 
     return app
 

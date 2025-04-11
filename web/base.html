@@ -24,7 +24,7 @@
                 </div>
                 
                 <nav class="flex gap-1">
-                    <a href="#" class="nav-link active">
+                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
                         <i class="fas fa-search mr-2"></i>템플릿 검색
                     </a>
                     <a href="#" class="nav-link">
@@ -46,12 +46,26 @@
                     <button id="theme-toggle" class="btn btn-ghost p-2 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 theme-transition" aria-label="테마 전환">
                         <i class="fas fa-moon text-lg" id="theme-icon"></i>
                     </button>
+                    
+                    <!-- 사용자 인증 상태에 따른 표시 -->
+                    {% if current_user.is_authenticated %}
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span class="text-sm font-medium">관리자</span>
+                        <a href="{{ url_for('member.profile') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="text-sm font-medium">{{ current_user.username }}</span>
+                        </a>
+                        <a href="{{ url_for('member.logout') }}" class="btn btn-outline btn-sm ml-2" title="로그아웃">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
                     </div>
+                    {% else %}
+                    <div class="flex items-center gap-2">
+                        <a href="{{ url_for('member.login') }}" class="btn btn-ghost btn-sm">로그인</a>
+                        <a href="{{ url_for('member.register') }}" class="btn btn-primary btn-sm">회원가입</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

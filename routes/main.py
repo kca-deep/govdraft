@@ -30,7 +30,7 @@ def health_check():
 
 
 # 검색 관련 라우트
-@main_bp.route("/search", methods=["GET"])
+@main_bp.route("/api/search", methods=["GET"])
 def search_templates():
     """템플릿 검색 API"""
     keyword = request.args.get("keyword", "")

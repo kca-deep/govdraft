@@ -13,3 +13,13 @@ charset-normalizer==3.4.1
 idna==3.10
 beautifulsoup4==4.12.3 # HTML 파싱 라이브러리
 lxml==5.3.2 # BeautifulSoup의 파서 (참고: Windows에서는 반드시 `pip install lxml==5.3.2 --only-binary=:all:` 명령어로 설치해야 함)
+flask-sqlalchemy==3.1.1 # 데이터베이스 ORM
+flask-login==0.6.3 # 사용자 인증 관리
+flask-wtf==1.2.1 # 폼 처리
+email-validator==2.1.1 # 이메일 유효성 검사
+Flask-Cors==4.0.0
+
+# 개발 도구
+pylint==3.0.2
+black==24.2.0
+pytest==7.4.0
