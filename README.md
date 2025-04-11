@@ -73,18 +73,34 @@
 
 ```
 govdraft/
-├── app.py                # 웹 애플리케이션 메인 파일
-├── web/                  # HTML 템플릿 디렉토리
-│   ├── base.html         # 기본 레이아웃 템플릿
-│   ├── index.html        # 메인 검색 페이지
+├── app.py                  # 애플리케이션 진입점 (애플리케이션 팩토리 함수)
+├── config.py               # 설정 및 환경 변수 관리
+├── api/                    # API 연동 모듈
+│   ├── __init__.py
+│   └── government_api.py   # 공공데이터포털 API 연동
+├── routes/                 # 라우트 핸들러
+│   ├── __init__.py         # 블루프린트 등록
+│   ├── main.py             # 메인 라우트 (기본, 검색, 토큰 계산, 오류 처리)
+│   └── drafts.py           # 보고서 생성 관련 라우트
+├── utils/                  # 유틸리티 함수
+│   ├── __init__.py
+│   ├── logging.py          # 로깅 설정
+│   ├── html_utils.py       # HTML 처리 유틸리티
+│   └── token_utils.py      # 토큰 계산 관련 유틸리티
+├── web/                    # HTML 템플릿 및 정적 파일 디렉토리
+│   ├── base.html           # 기본 레이아웃 템플릿
+│   ├── index.html          # 메인 검색 페이지
 │   ├── template_detail.html  # 템플릿 상세 페이지
-│   ├── 404.html          # 404 오류 페이지
-│   └── 500.html          # 500 오류 페이지
-├── logs/                 # 로그 파일 디렉토리
-├── .env                  # 환경 변수 파일
-├── requirements.txt      # 프로젝트 의존성
-├── README.md             # 프로젝트 문서
-└── LICENSE               # 라이센스 정보
+│   ├── 404.html            # 404 오류 페이지
+│   ├── 500.html            # 500 오류 페이지
+│   └── static/             # 정적 파일 (CSS, JS, 이미지)
+│       ├── css/            # CSS 파일
+│       └── js/             # JavaScript 파일
+├── logs/                   # 로그 파일 디렉토리
+├── .env                    # 환경 변수 파일
+├── requirements.txt        # 프로젝트 의존성
+├── README.md               # 프로젝트 문서
+└── LICENSE                 # 라이센스 정보
 ```
 
 ## 라이센스
