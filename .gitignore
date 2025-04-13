@@ -112,13 +112,5 @@ dmypy.json
 # API documentation
 api guide.pdf
 
-# Exclude web static files but not the directories themselves
-web/static/css/*
-!web/static/css/.gitkeep
-web/static/js/*
-!web/static/js/.gitkeep
-web/static/img/*
-!web/static/img/.gitkeep
-
 # Keep important empty directories
 !logs/.gitkeep
