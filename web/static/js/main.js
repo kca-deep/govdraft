@@ -70,12 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 보도자료인 경우 담당자 필수 확인
-        if (docType === 'press' && !managerInput.value.trim()) {
-            alert('보도자료 검색 시 담당자 정보가 필요합니다.');
-            managerInput.focus();
-            return;
-        }
+        // 보도자료인 경우 담당자 입력은 선택 사항입니다.
+        // (필수 확인 로직 제거됨)
         
         // 검색 결과 초기화
         document.getElementById('templates-container').innerHTML = '';

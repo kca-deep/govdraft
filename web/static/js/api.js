@@ -66,9 +66,11 @@ async function fetchTemplates(page = 1) {
             url += `&doc_type=${encodeURIComponent(docType)}`;
         }
         
-        // 보도자료인 경우 manager 파라미터 추가
-        if (docType === "press" && managerInput.value.trim()) {
-            url += `&manager=${encodeURIComponent(managerInput.value.trim())}`;
+        // 보도자료인 경우 manager 파라미터 추가 (값이 없으면 '%' 사용)
+        if (docType === "press") {
+            const managerValue = managerInput.value.trim();
+            const managerParam = managerValue ? managerValue : '%'; // 값이 없으면 '%' 사용
+            url += `&manager=${encodeURIComponent(managerParam)}`;
         }
 
         // 정렬 기준 파라미터 제거됨
