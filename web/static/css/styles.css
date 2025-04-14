@@ -20,7 +20,7 @@
     --radius: 0.5rem;
 }
 
-.dark {
+body.dark {
     --background: #0f172a;
     --card: #1e293b;
     --card-foreground: #f8fafc;
@@ -41,11 +41,11 @@
     }
 
     /* Dark mode specific overrides for report modal */
-    .dark #report-modal textarea::placeholder {
+    body.dark #report-modal textarea::placeholder {
         color: var(--muted-foreground); /* Use muted foreground for placeholder in dark mode */
         opacity: 0.6; /* Adjust opacity if needed */
     }
-    .dark #character-count { /* Target the character count span specifically */
+    body.dark #character-count { /* Target the character count span specifically */
         color: var(--muted-foreground); /* Ensure muted foreground color in dark mode */
     }
 }
@@ -372,7 +372,7 @@ body.modal-open {
 }
 
 /* Ensure modal background is dark in dark mode */
-.dark #template-modal > div, /* Target the inner div */
-.dark #report-modal > div {  /* Target the inner div */
+body.dark #template-modal > div, /* Target the inner div */
+body.dark #report-modal > div {  /* Target the inner div */
     background-color: var(--card) !important; /* Force dark card background in dark mode */
 }

@@ -260,22 +260,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // 저장된 테마 확인 및 적용
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
-            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
             themeIcon.classList.remove('fa-moon');
             themeIcon.classList.add('fa-sun');
         }
         
         // 테마 토글 클릭 이벤트
         themeToggle.addEventListener('click', function() {
-            if (document.documentElement.classList.contains('dark')) {
+            if (document.body.classList.contains('dark')) {
                 // 다크 모드 -> 라이트 모드
-                document.documentElement.classList.remove('dark');
+                document.body.classList.remove('dark');
                 themeIcon.classList.remove('fa-sun');
                 themeIcon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'light');
             } else {
                 // 라이트 모드 -> 다크 모드
-                document.documentElement.classList.add('dark');
+                document.body.classList.add('dark');
                 themeIcon.classList.remove('fa-moon');
                 themeIcon.classList.add('fa-sun');
                 localStorage.setItem('theme', 'dark');
