@@ -53,10 +53,13 @@ def create_app(config_class=Config):
     return app
 
 
+# Gunicorn을 위해 모듈 수준에서 app 정의
+app = create_app()
+
+
 if __name__ == "__main__":
     # 웹 애플리케이션 실행
-    app = create_app()
     port = Config.PORT
     logger.info(f"Flask 웹 애플리케이션을 {port} 포트에서 시작합니다.")
     print(f"Flask 웹 애플리케이션을 http://localhost:{port} 에서 실행 중입니다.")
-    app.run(debug=Config.DEBUG, host="0.0.0.0", port=port)
+    app.run(port=port)
