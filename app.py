@@ -15,7 +15,6 @@ import os
 
 def create_app(config_class=Config):
     """애플리케이션 팩토리 함수"""
-    # Flask 애플리케이션 초기화
     app = Flask(
         __name__,
         template_folder="web",
@@ -23,16 +22,12 @@ def create_app(config_class=Config):
         static_url_path="/static",
     )
 
-    # 설정 적용
     app.config.from_object(config_class)
 
-    # CORS 설정
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # 데이터베이스 초기화
     db.init_app(app)
 
-    # Flask-Login 설정
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = "member.login"
@@ -42,10 +37,8 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # 라우트 등록
     register_routes(app)
 
-    # 데이터베이스 생성
     with app.app_context():
         db.create_all()
         logger.info("데이터베이스 테이블 생성 완료")
@@ -53,12 +46,11 @@ def create_app(config_class=Config):
     return app
 
 
-# Gunicorn을 위해 모듈 수준에서 app 정의
+# Gunicorn용 모듈 수준 app 정의
 app = create_app()
 
 
 if __name__ == "__main__":
-    # 웹 애플리케이션 실행
     port = Config.PORT
     logger.info(f"Flask 웹 애플리케이션을 {port} 포트에서 시작합니다.")
     print(f"Flask 웹 애플리케이션을 http://localhost:{port} 에서 실행 중입니다.")
