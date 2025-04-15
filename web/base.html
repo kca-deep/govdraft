@@ -18,29 +18,34 @@
     <!-- 헤더 영역 -->
     <header class="main-header sticky top-0 z-10 py-4 shadow-sm">
         <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex items-center">
+            <div class="flex flex-wrap md:flex-nowrap md:items-center justify-between gap-y-2 md:gap-4"> <!-- flex-wrap 추가, gap-y 조정 -->
+                <!-- 로고 (항상 좌측) -->
+                <div class="flex items-center order-1 md:order-1"> <!-- 순서 지정 -->
                     <h1 class="text-xl font-bold text-card-foreground">KCA 문서 포털</h1>
                 </div>
+
+                <!-- 모바일: 네비게이션 아이콘 (우측 정렬, 로고 옆) -->
+                <nav class="flex md:hidden order-2 justify-end gap-1 ml-auto"> <!-- order, justify-end, ml-auto 추가 -->
+                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %} p-2"> <i class="fas fa-search"></i> </a>
+                    <a href="#" class="nav-link p-2"> <i class="fas fa-clipboard-list"></i> </a>
+                    <a href="#" class="nav-link p-2"> <i class="fas fa-star"></i> </a>
+                    <a href="#" class="nav-link p-2"> <i class="fas fa-question-circle"></i> </a>
+                </nav>
+                <!-- 네비게이션 (데스크탑 전용) -->
                 
-                <nav class="flex gap-1">
-                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                        <i class="fas fa-search mr-2"></i>템플릿 검색
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-clipboard-list mr-2"></i>템플릿 목록
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-star mr-2"></i>즐겨찾기
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-question-circle mr-2"></i>도움말
-                    </a>
+                <!-- 데스크탑: 네비게이션 (중앙 정렬) -->
+                <nav class="hidden md:flex order-3 md:order-2 flex-grow justify-center gap-1"> <!-- order, flex-grow, justify-center 추가 -->
+                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}"> <i class="fas fa-search mr-2"></i>템플릿 검색 </a>
+                    <a href="#" class="nav-link"> <i class="fas fa-clipboard-list mr-2"></i>템플릿 목록 </a>
+                    <a href="#" class="nav-link"> <i class="fas fa-star mr-2"></i>즐겨찾기 </a>
+                    <a href="#" class="nav-link"> <i class="fas fa-question-circle mr-2"></i>도움말 </a>
                 </nav>
                 
-                <div class="flex items-center gap-4">
-                    <button class="btn btn-outline">
-                        <i class="fas fa-bell mr-2"></i>알림
+                <!-- 사용자 메뉴 (모바일: 우측 정렬 / 데스크탑: 우측) -->
+                <!-- 사용자 메뉴 (모바일: 두번째 줄 우측 / 데스크탑: 첫 줄 우측) -->
+                <div class="flex items-center order-4 md:order-3 justify-end w-full md:w-auto gap-2 md:gap-4"> <!-- order, justify-end, w-full 추가 -->
+                    <button class="btn btn-outline p-2 md:px-3 md:py-2"> <!-- 모바일 패딩 조정 -->
+                        <i class="fas fa-bell"></i><span class="hidden md:inline md:ml-2">알림</span>
                     </button>
                     <!-- 테마 토글 버튼 (아이콘 형태) -->
                     <button id="theme-toggle" class="btn btn-ghost p-2 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 theme-transition" aria-label="테마 전환">
@@ -51,12 +56,10 @@
                     {% if current_user.is_authenticated %}
                     <div class="flex items-center gap-2">
                         <a href="{{ url_for('member.profile') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span class="text-sm font-medium">{{ current_user.username }}</span>
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white"> <i class="fas fa-user"></i> </div>
+                            <span class="hidden md:inline text-sm font-medium">{{ current_user.username }}</span> <!-- 모바일에서 이름 숨김 -->
                         </a>
-                        <a href="{{ url_for('member.logout') }}" class="btn btn-outline btn-sm ml-2" title="로그아웃">
+                        <a href="{{ url_for('member.logout') }}" class="btn btn-outline btn-sm p-2 md:ml-2" title="로그아웃"> <!-- 모바일 패딩 조정 -->
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>

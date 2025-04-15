@@ -15,9 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalContent = document.getElementById('modal-content');
     const closeModal = document.getElementById('close-modal');
     // const selectTemplate = document.getElementById('select-template'); // 사용되지 않는 요소 참조 주석 처리 또는 제거
-    const managerInputContainer = document.getElementById('manager-input-container');
-    const managerInput = document.getElementById('manager-input');
-    const managerRequired = document.getElementById('manager-required');
     
     // 보고서 관련 DOM 요소 참조
     const generateReportBtn = document.getElementById('generate-report-btn');
@@ -37,18 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 테마 토글 초기화
     initializeThemeToggle();
     
-    // 문서 유형에 따라 담당자 필드 보이기/숨기기
-    docTypeSelect.addEventListener('change', function() {
-        const selectedDocType = this.value;
-        
-        if (selectedDocType === 'press') {
-            managerInputContainer.classList.remove('hidden');
-            managerRequired.classList.remove('hidden');
-        } else {
-            managerInputContainer.classList.add('hidden');
-            managerRequired.classList.add('hidden');
-        }
-    });
     
     // 검색 폼 제출 이벤트
     searchForm.addEventListener('submit', function(e) {

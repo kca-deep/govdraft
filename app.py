@@ -9,6 +9,11 @@ from flask_cors import CORS
 from config import Config, db
 from routes import register_routes
 from utils.logging import logger
+from routes.main import (
+    format_date_filter,
+    format_content_filter,
+    get_meta_fields,
+)  # 필터 및 헬퍼 함수 임포트
 from routes.member import User
 import os
 
@@ -44,6 +49,12 @@ def create_app(config_class=Config):
 
     # 라우트 등록
     register_routes(app)
+
+    # Jinja 환경에 필터 및 헬퍼 함수 등록
+    app.jinja_env.filters["format_date"] = format_date_filter
+    app.jinja_env.filters["format_content"] = format_content_filter
+    app.jinja_env.globals["get_meta_fields"] = get_meta_fields
+    logger.info("Jinja 필터 및 헬퍼 함수 등록 완료")
 
     # 데이터베이스 생성
     with app.app_context():

@@ -239,118 +239,48 @@ function updateSelectedTemplatesUI() {
  * 템플릿 상세 정보 표시 함수
  * @param {Object} template - 템플릿 객체
  */
-function showTemplateDetail(template) {
+async function showTemplateDetail(template) {
     const templateModal = document.getElementById('template-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
-    
-    // 모달 내용 설정
+
+    // 모달 제목 설정
     modalTitle.textContent = template.title || '제목 없음';
-    
-    const date = template.date
-        ? new Date(template.date).toLocaleDateString('ko-KR')
-        : '날짜 정보 없음';
-    
-    // 문서 유형 확인 (API에서 반환하는 docType 사용)
-    const docType = template.docType || '';
-    
-    // 문서 유형별 메타 정보 필드 정의
-    const metaFieldsConfig = {
-        '보도자료': [
-            { label: '발행 부처', key: 'ministry' },
-            { label: '발행 부서', key: 'department' },
-            { label: '담당자', key: 'manager' },
-            { label: '보도일자', key: 'date', isDate: true }, // 날짜 형식 적용 플래그
-            { label: '보도시점', key: 'time' }
-        ],
-        '연설문': [
-            { label: '연설자', key: 'person' },
-            { label: '연설 장소', key: 'place' },
-            { label: '연설일', key: 'date', isDate: true }
-        ],
-        '발간사': [
-            { label: '작성자', key: 'person' },
-            { label: '발간일', key: 'date', isDate: true }
-        ],
-        '정책보고서': [
-            { label: '발행 부처', key: 'ministry' },
-            { label: '발행 부서', key: 'department' },
-            { label: '담당자', key: 'manager' },
-            { label: '작성일', key: 'date', isDate: true }
-        ],
-        '회의': [ // '회의/행사계획'을 포함
-            { label: '일자', key: 'date', isDate: true },
-            { label: '장소', key: 'place' },
-            { label: '참석자', key: 'person' }
-        ],
-        '행사계획': [ // '회의/행사계획'을 포함
-            { label: '일자', key: 'date', isDate: true },
-            { label: '장소', key: 'place' },
-            { label: '참석자', key: 'person' }
-        ],
-        'default': [ // 일치하는 유형이 없을 때 기본값
-            { label: '문서 유형', key: 'docType' },
-            { label: '날짜', key: 'date', isDate: true },
-            { label: '문서 ID', key: 'id' }
-        ]
-    };
+    // 모바일 반응형 클래스 추가 (필요시)
+    modalTitle.className = 'text-xl md:text-2xl font-bold text-card-foreground';
 
-    // 현재 문서 유형에 맞는 필드 설정 가져오기
-    let currentFields = metaFieldsConfig['default']; // 기본값으로 시작
-    for (const typeKeyword in metaFieldsConfig) {
-        if (docType.includes(typeKeyword)) {
-            currentFields = metaFieldsConfig[typeKeyword];
-            break; // 첫 번째 일치하는 유형 사용
-        }
-    }
-
-    // infoHTML 생성
-    let infoHTML = currentFields.map(field => {
-        let value = template[field.key] || '정보 없음';
-        if (field.isDate && value !== '정보 없음') {
-            value = date; // 미리 계산된 날짜 형식 사용
-        }
-        return `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">${field.label}</dt>
-                <dd class="text-sm text-card-foreground">${value}</dd>
-            </div>
-        `;
-    }).join('');
-
-    // 공통 정보인 문서 ID 추가 (currentFields에 이미 포함되지 않았다면)
-    if (!currentFields.some(field => field.key === 'id')) {
-        infoHTML += `
-            <div>
-                <dt class="text-sm font-medium text-muted-foreground">문서 ID</dt>
-                <dd class="text-sm text-card-foreground">${template.id || '정보 없음'}</dd>
-            </div>
-        `;
-    }
-    
-    // 모달 내용 설정 및 애니메이션 적용
+    // 로딩 표시
     modalContent.innerHTML = `
-        <div class="space-y-6 fade-in">
-            <div class="flex items-center space-x-2">
-                <span class="badge badge-primary">${docType || '문서'}</span>
-                <span class="text-muted-foreground">${date}</span>
-            </div>
-            
-            <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.1s;">
-                <h3 class="text-lg font-medium text-card-foreground mb-4">문서 정보</h3>
-                <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 bg-muted p-4 rounded-lg theme-transition">
-                    ${infoHTML}
-                </dl>
-            </div>
-            
-            <div class="border-t border-border pt-4 fade-in" style="animation-delay: 0.2s;">
-                <h3 class="text-lg font-medium text-card-foreground mb-4">내용</h3>
-                <div class="max-w-none text-sm content-area bg-muted/50 p-4 rounded-lg theme-transition text-card-foreground">
-                    ${formatContent(template.content || template.description || '내용 정보가 없습니다.')}
-                </div>
-            </div>
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span class="ml-3 text-muted-foreground">상세 정보 로딩 중...</span>
         </div>
     `;
+
+    // 모달 표시 (애니메이션은 그대로 유지)
+    templateModal.style.opacity = '0';
+    templateModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    setTimeout(() => {
+        templateModal.style.opacity = '1';
+        templateModal.style.transition = 'opacity 0.3s ease-in-out';
+    }, 10);
+
+    try {
+        // 서버에서 상세 정보 HTML 가져오기
+        const response = await fetch(`/template_detail/${template.id}`);
+        if (!response.ok) {
+            throw new Error(`상세 정보 로드 실패: ${response.status}`);
+        }
+        const htmlContent = await response.text();
+
+        // 모달 내용 업데이트
+        modalContent.innerHTML = htmlContent;
+
+    } catch (error) {
+        console.error('템플릿 상세 정보 로드 오류:', error);
+        modalContent.innerHTML = `<div class="p-6 text-red-500">상세 정보를 불러오는 중 오류가 발생했습니다: ${error.message}</div>`;
+    }
     
     // 모달 표시 애니메이션
     templateModal.style.opacity = '0';

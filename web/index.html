@@ -3,22 +3,23 @@
 {% block title %}정부 문서 템플릿 검색{% endblock %}
 
 {% block content %}
-<div class="mb-8 fade-in" style="animation-delay: 0.1s;">
-    <h2 class="text-3xl font-bold mb-2 text-card-foreground">문서 검색</h2>
-    <p class="text-muted-foreground">보도자료, 연설문, 정책 보고서 등 다양한 정부 문서 템플릿을 검색하고 선택하세요.</p>
+<div class="mb-4 md:mb-8 fade-in" style="animation-delay: 0.1s;"> <!-- 모바일 하단 마진 줄임 -->
+    <h2 class="text-3xl font-bold mb-2 text-card-foreground hidden md:block">문서 검색</h2>
+    <p class="text-muted-foreground hidden md:block">보도자료, 연설문, 정책 보고서 등 다양한 정부 문서 템플릿을 검색하고 선택하세요.</p>
 </div>
 
 <!-- 검색 폼 카드 -->
-<div class="card p-6 mb-8 fade-in hover-lift theme-transition" style="animation-delay: 0.2s;">
-    <h2 class="text-lg font-semibold mb-4 text-card-foreground">검색 조건 입력</h2>
+<div class="card p-4 md:p-6 mb-8 fade-in hover-lift theme-transition" style="animation-delay: 0.2s;"> <!-- 모바일 내부 패딩 줄임 -->
+    <h2 class="text-lg font-semibold mb-4 text-card-foreground hidden md:block">검색 조건 입력</h2> <!-- 모바일에서 숨김 -->
     
     <form id="search-form" class="space-y-4">
-        <div class="flex flex-wrap md:flex-nowrap items-end gap-3">
+        <div class="flex flex-wrap md:flex-nowrap items-end gap-1 md:gap-3"> <!-- 모바일 gap 더 줄임 -->
             <!-- 문서 유형 선택 (필수) -->
-            <div class="w-full md:w-1/6">
-                <label for="doc_type" class="label">문서 유형 <span class="text-destructive">*</span></label>
+            <!-- 문서 유형 (모바일: 1/2 너비) -->
+            <div class="w-full md:w-1/6"> <!-- 모바일 너비 원복 -->
+                <label for="doc_type" class="label hidden md:block">문서 유형 <span class="text-destructive">*</span></label>
                 <select id="doc_type" name="doc_type" required
-                    class="select input w-full theme-transition">
+                    class="select input w-full theme-transition h-9 md:h-10"> <!-- 모바일 높이 줄임 -->
                     <option value="" disabled selected>문서 유형</option>
                     <option value="press">보도자료</option>
                     <option value="speech">연설문</option>
@@ -30,23 +31,25 @@
             </div>
             
             <!-- 검색어 (필수) -->
-            <div class="w-full md:w-2/5 flex-grow">
-                <label for="search-input" class="label">제목 키워드 <span class="text-destructive">*</span></label>
+            <!-- 검색어 (모바일: 1/2 너비) -->
+            <div class="w-full md:w-2/5 md:flex-grow"> <!-- 모바일 너비 원복 -->
+                <label for="search-input" class="label hidden md:block">제목 키워드 <span class="text-destructive">*</span></label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-search text-muted-foreground"></i>
                     </span>
                     <input type="text" id="search-input" name="keyword" required
-                        class="input pl-10 pr-3 w-full theme-transition"
-                        placeholder="검색어를 입력하세요">
+                        class="input pl-10 pr-3 w-full theme-transition h-9 md:h-10"
+                        placeholder="검색어">
                 </div>
             </div>
             
             <!-- 발행 부처 -->
-            <div class="w-full md:w-1/6">
-                <label for="ministry" class="label">발행 부처</label>
+            <!-- 발행 부처 (모바일: 1/2 너비) -->
+            <div class="w-full md:w-1/6"> <!-- 모바일 너비 원복 -->
+                <label for="ministry" class="label hidden md:block">발행 부처</label>
                 <select id="ministry" name="ministry" 
-                    class="select input w-full theme-transition">
+                    class="select input w-full theme-transition h-9 md:h-10"> <!-- 모바일 높이 줄임 -->
                     <option value="">모든 부처</option>
                     <option value="행정안전부">행정안전부</option>
                     <option value="국토교통부">국토교통부</option>
@@ -56,18 +59,12 @@
                 </select>
             </div>
             
-            <!-- 보도자료 전용 - 담당자 입력 필드 (기본적으로 숨김) -->
-            <div id="manager-input-container" class="w-full md:w-1/6 hidden">
-                <label for="manager-input" class="label">담당자</label>
-                <input type="text" id="manager-input" name="manager" 
-                    class="input w-full theme-transition"
-                    placeholder="담당자 이름">
-            </div>
             
             <!-- 검색 버튼 -->
-            <div class="w-full md:w-auto">
+            <!-- 검색 버튼 (모바일: 1/2 너비) -->
+            <div class="w-full md:w-auto"> <!-- 모바일 너비 원복 -->
                 <button type="submit" id="search-button" 
-                    class="btn btn-primary w-full md:w-auto h-10 aspect-square rounded-full theme-transition flex items-center justify-center hover:scale-105 hover:shadow-md transition-all">
+                    class="btn btn-primary w-full md:w-auto h-9 md:h-10 aspect-square rounded-full theme-transition flex items-center justify-center hover:scale-105 hover:shadow-md transition-all"> <!-- 모바일 높이 줄임 -->
                     <i class="fas fa-search text-lg"></i>
                 </button>
             </div>

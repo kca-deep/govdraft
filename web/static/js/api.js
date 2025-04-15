@@ -5,7 +5,6 @@
 async function fetchTemplates(page = 1) {
     const searchInput = document.getElementById('search-input');
     const docTypeSelect = document.getElementById('doc_type');
-    const managerInput = document.getElementById('manager-input');
     // const sortBySelect = document.getElementById('sort-by'); // 정렬 기준 제거됨
     const initialMessage = document.getElementById('initial-message');
     const noResults = document.getElementById('no-results');
@@ -66,12 +65,8 @@ async function fetchTemplates(page = 1) {
             url += `&doc_type=${encodeURIComponent(docType)}`;
         }
         
-        // 보도자료인 경우 manager 파라미터 추가 (값이 없으면 '%' 사용)
-        if (docType === "press") {
-            const managerValue = managerInput.value.trim();
-            const managerParam = managerValue ? managerValue : '%'; // 값이 없으면 '%' 사용
-            url += `&manager=${encodeURIComponent(managerParam)}`;
-        }
+        // 담당자 검색 조건은 항상 '%'로 설정
+        url += `&manager=${encodeURIComponent('%')}`;
 
         // 정렬 기준 파라미터 제거됨
         
