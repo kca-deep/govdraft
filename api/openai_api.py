@@ -20,14 +20,27 @@ from utils.logging import logger
 load_dotenv()
 
 # OpenAI API 관련 설정
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", Config.OPENAI_API_KEY)
-OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", Config.OPENAI_MODEL)
-MAX_RETRIES = 3
-RETRY_DELAY = 2  # 초 단위
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    OPENAI_API_KEY = Config.OPENAI_API_KEY
 
-# API 키 설정
-openai.api_key = OPENAI_API_KEY
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
+if not OPENAI_MODEL:
+    OPENAI_MODEL = Config.OPENAI_MODEL
+
+OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
+RETRY_DELAY = int(os.getenv("RETRY_DELAY", "2"))
+
+# API 키 확인 및 설정
+if not OPENAI_API_KEY:
+    logger.error(
+        "OpenAI API 키가 설정되지 않았습니다. 환경 변수 OPENAI_API_KEY를 확인해주세요."
+    )
+else:
+    # API 키 설정
+    openai.api_key = OPENAI_API_KEY
+    logger.info(f"OpenAI 모델: {OPENAI_MODEL}")
 
 
 # HTML 태그 제거 함수

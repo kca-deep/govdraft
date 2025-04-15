@@ -26,6 +26,10 @@ class Config:
     PORT = int(os.getenv("PORT", 5000))
     DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
+    # OpenAI API 설정
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
     # 데이터베이스 설정
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///govdraft.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
