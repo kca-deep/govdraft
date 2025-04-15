@@ -5,6 +5,7 @@
 
 from functools import lru_cache
 import tiktoken
+from typing import Dict, Union, Optional, overload
 from config import Config
 from utils.logging import logger
 
@@ -18,27 +19,53 @@ def get_model_prices():
     }
 
 
+@overload
 def calculate_token_cost(
     input_text: str, output_text: str, model: str = "gpt-4o-mini"
-) -> dict:
+) -> Dict[str, Union[int, float, str]]: ...
+
+
+@overload
+def calculate_token_cost(
+    input_tokens: int, output_tokens: int, model: str = "gpt-4o-mini"
+) -> Dict[str, Union[int, float, str]]: ...
+
+
+def calculate_token_cost(
+    input_text_or_tokens: Union[str, int],
+    output_text_or_tokens: Union[str, int],
+    model: str = "gpt-4o-mini",
+) -> Dict[str, Union[int, float, str]]:
     """
     입출력 텍스트의 토큰 수와 비용을 계산합니다.
+    텍스트나 토큰 수를 직접 입력할 수 있습니다.
 
     Args:
-        input_text: 입력 텍스트
-        output_text: 출력 텍스트
+        input_text_or_tokens: 입력 텍스트 또는 토큰 수
+        output_text_or_tokens: 출력 텍스트 또는 토큰 수
         model: 사용된 모델 이름
 
     Returns:
         토큰 수와 비용 정보가 담긴 사전
     """
     try:
-        # 토큰 인코더 초기화
-        encoding = tiktoken.encoding_for_model(model)
+        # 입력이 문자열인지 숫자인지 확인
+        if isinstance(input_text_or_tokens, str) and isinstance(
+            output_text_or_tokens, str
+        ):
+            # 텍스트로부터 토큰 수 계산
+            encoding = tiktoken.encoding_for_model(model)
+            input_tokens = len(encoding.encode(input_text_or_tokens))
+            output_tokens = len(encoding.encode(output_text_or_tokens))
+        elif isinstance(input_text_or_tokens, int) and isinstance(
+            output_text_or_tokens, int
+        ):
+            # 이미 계산된 토큰 수 사용
+            input_tokens = input_text_or_tokens
+            output_tokens = output_text_or_tokens
+        else:
+            raise TypeError("입력과 출력은 둘 다 문자열이거나 둘 다 정수여야 합니다.")
 
-        # 토큰 수 계산
-        input_tokens = len(encoding.encode(input_text))
-        output_tokens = len(encoding.encode(output_text))
         total_tokens = input_tokens + output_tokens
 
         # 모델별 가격 정보 가져오기
@@ -70,9 +97,9 @@ def calculate_token_cost(
         logger.error(f"토큰 비용 계산 중 오류: {str(e)}")
         return {
             "error": f"토큰 비용 계산 중 오류: {str(e)}",
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "total_tokens": 0,
+            "input_tokens": input_tokens if "input_tokens" in locals() else 0,
+            "output_tokens": output_tokens if "output_tokens" in locals() else 0,
+            "total_tokens": total_tokens if "total_tokens" in locals() else 0,
             "cost_usd": 0,
             "cost_krw": 0,
             "model": model,

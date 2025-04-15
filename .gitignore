@@ -52,6 +52,11 @@ logs/
 *.log
 token_usage.json
 drafts/
+result/
+*.jsonl
+analysis_results/
+temp/
+cache/
 
 # Database
 *.db

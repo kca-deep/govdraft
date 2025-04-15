@@ -21,7 +21,9 @@
             <div class="flex flex-wrap md:flex-nowrap md:items-center justify-between gap-y-2 md:gap-4"> <!-- flex-wrap 추가, gap-y 조정 -->
                 <!-- 로고 (항상 좌측) -->
                 <div class="flex items-center order-1 md:order-1"> <!-- 순서 지정 -->
-                    <h1 class="text-xl font-bold text-card-foreground">KCA 문서 포털</h1>
+                    <a href="{{ url_for('main.index') }}" class="hover:opacity-80 transition-opacity">
+                        <h1 class="text-xl font-bold text-card-foreground">KCA 문서 포털</h1>
+                    </a>
                 </div>
 
                 <!-- 모바일: 네비게이션 아이콘 (우측 정렬, 로고 옆) -->

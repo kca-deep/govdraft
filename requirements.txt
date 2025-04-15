@@ -19,6 +19,11 @@ flask-wtf==1.2.1 # 폼 처리
 email-validator==2.1.1 # 이메일 유효성 검사
 Flask-Cors==4.0.0
 
+# NLP 라이브러리
+nltk==3.8.1 # 자연어 처리 라이브러리
+konlpy==0.6.0 # 한국어 형태소 분석기 (JPype1 의존성 있음)
+JPype1==1.5.0 # konlpy를 위한 JVM 브릿지
+
 # 개발 도구
 pylint==3.0.2
 black==24.2.0
