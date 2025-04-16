@@ -57,6 +57,8 @@ result/
 analysis_results/
 temp/
 cache/
+analysis/
+*.json
 
 # Database
 *.db

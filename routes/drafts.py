@@ -13,8 +13,10 @@ from utils.token_utils import calculate_token_cost
 from utils.logging import logger
 from api.openai_api import (
     analyze_templates as template_analyzer,
+    analyze_templates_from_jsonl,
     generate_report_prompt,
     call_openai_api,
+    generate_draft as generate_draft_api,
 )
 from slugify import slugify
 
@@ -204,25 +206,23 @@ def analyze_content():
         if not os.path.exists(analysis_dir):
             os.makedirs(analysis_dir)
 
-        # 출력 파일 경로 설정
-        filename = os.path.basename(jsonl_file).replace(".jsonl", "")
+        # 타임스탬프를 이용하여 파일명 생성
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(
-            analysis_dir, f"{filename}_analysis_{timestamp}.json"
-        )
+        output_filename = f"template_analysis_{timestamp}.json"
+        output_file = os.path.join(analysis_dir, output_filename)
 
         # 템플릿 내용 분석
-        success = template_analyzer(jsonl_file, output_file)
+        success = analyze_templates_from_jsonl(jsonl_file, output_file)
 
         if not success:
             logger.error("템플릿 내용 분석 실패")
             return jsonify({"error": "템플릿 내용 분석에 실패했습니다."}), 500
 
-        # 응답 생성
+        # 응답 생성 - 파일 이름만 반환하여 경로 문제 방지
         response = {
             "analyzed_at": datetime.datetime.now().isoformat(),
             "jsonl_file": jsonl_file,
-            "output_file": output_file,
+            "output_file": output_filename,  # 파일 이름만 반환 (경로 제외)
             "status": "success",
         }
 
@@ -318,186 +318,76 @@ def generate_draft():
                 404,
             )
 
-        # 보고서 생성용 프롬프트 구성
-        prompt = generate_report_prompt(user_input, selected_templates)
+        # 사용자 입력 데이터 형식화
+        user_input_dict = {"title": user_input}
 
-        # OpenAI API 호출하여 보고서 생성
-        start_time = time.time()
-        response = call_openai_api(prompt)
-        end_time = time.time()
-
-        # API 응답에서 내용 추출
-        content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
-
-        # 토큰 사용량 및 비용 계산
-        input_tokens = response.get("usage", {}).get("prompt_tokens", 0)
-        output_tokens = response.get("usage", {}).get("completion_tokens", 0)
-        token_cost = calculate_token_cost(input_tokens, output_tokens)
+        # api/openai_api.py에 있는 generate_draft 함수 호출
+        result, token_info = generate_draft_api(user_input_dict, selected_templates)
 
         # 응답 구성
-        result = {
-            "content": content,
-            "token_info": {
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "total_tokens": input_tokens + output_tokens,
-                "cost_usd": token_cost["cost_usd"],
-                "cost_krw": token_cost["cost_krw"],
-                "processing_time": end_time - start_time,
-            },
+        response = {
+            "result": "success",
+            "report": result,
+            "token_info": token_info,
+            "resultFile": f"generated_report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         }
 
-        # 결과 저장 (옵션)
+        # analysis 디렉토리 확인 및 생성
+        analysis_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "analysis"
+        )
+        if not os.path.exists(analysis_dir):
+            os.makedirs(analysis_dir)
+
+        # 결과 저장
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         result_filename = f"generated_report_{timestamp}.json"
-        result_path = os.path.join("results", result_filename)
-
-        # results 디렉터리가 없으면 생성
-        os.makedirs("results", exist_ok=True)
+        result_path = os.path.join(analysis_dir, result_filename)
 
         with open(result_path, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
-        return jsonify(
-            {"result": "success", "report": result, "resultFile": result_filename}
-        )
+        # 파일 크기 계산 (KB)
+        file_size_kb = round(os.path.getsize(result_path) / 1024, 2)
+
+        # 응답 업데이트 - 파일명만 포함하고 파일 크기 추가
+        response["resultFile"] = result_filename
+        response["size_kb"] = file_size_kb
+
+        return jsonify(response)
 
     except Exception as e:
         logger.error(f"보고서 생성 중 오류: {str(e)}")
         return jsonify({"error": f"보고서 생성 중 오류가 발생했습니다: {str(e)}"}), 500
 
 
-@drafts_bp.route("/api/analyze", methods=["POST"])
-def api_analyze_templates():
-    """
-    선택된 템플릿들을 분석하여 공통 키워드, 형식성, 객관성 등을 파악
-    """
+# 분석 결과 파일 서빙 라우트 추가
+@drafts_bp.route("/analysis/<filename>")
+def serve_analysis_file(filename):
+    """분석 결과 파일을 제공하는 API"""
     try:
-        # POST 요청 데이터 파싱
-        data = request.get_json()
-        if not data or "templates" not in data:
-            logger.warning("템플릿 데이터 없이 /api/analyze 요청 발생")
-            return jsonify({"error": "템플릿 데이터가 필요합니다"}), 400
-
-        templates = data.get("templates", [])
-        if not templates:
-            logger.warning("빈 템플릿 목록으로 /api/analyze 요청 발생")
-            return jsonify({"error": "최소 하나 이상의 템플릿이 필요합니다"}), 400
-
-        logger.info(f"/api/analyze 요청 시작: {len(templates)}개 템플릿")
-        start_time = time.time()
-
-        # 템플릿 분석 수행
-        analysis_result = template_analyzer(templates)
-
-        # 결과 저장
-        results_dir = os.path.join(current_app.root_path, "results")
-        if not os.path.exists(results_dir):
-            os.makedirs(results_dir)
-
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        result_file = os.path.join(results_dir, f"analysis_{timestamp}.json")
-
-        with open(result_file, "w", encoding="utf-8") as f:
-            json.dump(analysis_result, f, ensure_ascii=False, indent=2)
-
-        # 처리 시간 측정 및 로깅
-        processing_time = time.time() - start_time
-        logger.info(
-            f"/api/analyze 요청 완료: {processing_time:.2f}초 소요, 결과 저장: {result_file}"
+        # analysis 디렉토리 경로
+        analysis_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "analysis"
         )
 
-        return jsonify(analysis_result)
+        # 파일 경로 구성
+        file_path = os.path.join(analysis_dir, filename)
+
+        # 파일 존재 확인
+        if not os.path.exists(file_path):
+            logger.error(f"분석 파일을 찾을 수 없음: {filename}")
+            return jsonify({"error": f"파일을 찾을 수 없습니다: {filename}"}), 404
+
+        # 파일 내용 읽기
+        with open(file_path, "r", encoding="utf-8") as f:
+            file_content = json.load(f)
+
+        return jsonify(file_content)
 
     except Exception as e:
-        logger.error(f"/api/analyze 처리 중 오류: {str(e)}")
-        return jsonify({"error": f"템플릿 분석 중 오류가 발생했습니다: {str(e)}"}), 500
-
-
-@drafts_bp.route("/api/generate", methods=["POST"])
-def api_generate_report():
-    """
-    사용자 입력과 선택된 템플릿을 기반으로 보고서 생성
-    """
-    try:
-        # POST 요청 데이터 파싱
-        data = request.get_json()
-        if not data:
-            logger.warning("데이터 없이 /api/generate 요청 발생")
-            return jsonify({"error": "보고서 생성에 필요한 데이터가 없습니다"}), 400
-
-        user_input = data.get("userInput", {})
-        templates = data.get("templates", [])
-
-        if not user_input:
-            logger.warning("사용자 입력 없이 /api/generate 요청 발생")
-            return jsonify({"error": "보고서 제목과 요구사항이 필요합니다"}), 400
-
-        if not templates:
-            logger.warning("템플릿 없이 /api/generate 요청 발생")
-            return jsonify({"error": "최소 하나 이상의 템플릿이 필요합니다"}), 400
-
-        title = user_input.get("title", "제목 없음")
-        logger.info(
-            f"/api/generate 요청 시작: 제목='{title}', {len(templates)}개 템플릿"
+        logger.error(f"분석 파일 제공 중 오류: {str(e)}")
+        return (
+            jsonify({"error": f"분석 파일 제공 중 오류가 발생했습니다: {str(e)}"}),
+            500,
         )
-        start_time = time.time()
-
-        # 보고서 생성 프롬프트 구성
-        prompt = generate_report_prompt(user_input, templates)
-
-        # OpenAI API 호출
-        response = call_openai_api(prompt)
-
-        # 응답에서 생성된 보고서 추출
-        generated_content = (
-            response.get("choices", [{}])[0].get("message", {}).get("content", "")
-        )
-
-        # 토큰 사용량 및 비용 계산
-        token_usage = response.get("usage", {})
-        input_tokens = token_usage.get("prompt_tokens", 0)
-        output_tokens = token_usage.get("completion_tokens", 0)
-
-        # 비용 계산
-        cost_info = calculate_token_cost(input_tokens, output_tokens)
-
-        # 결과 저장
-        results_dir = os.path.join(current_app.root_path, "results")
-        if not os.path.exists(results_dir):
-            os.makedirs(results_dir)
-
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        title_slug = slugify(title)
-        result_file = os.path.join(results_dir, f"report_{title_slug}_{timestamp}.json")
-
-        result = {
-            "title": title,
-            "content": generated_content,
-            "token_usage": {
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "total_tokens": input_tokens + output_tokens,
-            },
-            "cost": cost_info,
-            "timestamp": datetime.now().isoformat(),
-            "metadata": {
-                "user_input": user_input,
-                "num_templates_used": len(templates),
-            },
-        }
-
-        with open(result_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
-
-        # 처리 시간 측정 및 로깅
-        processing_time = time.time() - start_time
-        logger.info(
-            f"/api/generate 요청 완료: {processing_time:.2f}초 소요, {input_tokens + output_tokens}개 토큰 사용, 결과 저장: {result_file}"
-        )
-
-        return jsonify(result)
-
-    except Exception as e:
-        logger.error(f"/api/generate 처리 중 오류: {str(e)}")
-        return jsonify({"error": f"보고서 생성 중 오류가 발생했습니다: {str(e)}"}), 500

@@ -152,13 +152,23 @@
 
 <!-- 보고서 생성 모달 -->
 <div id="report-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden theme-transition" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
-    <div class="bg-card rounded-lg shadow-lg w-full max-w-2xl theme-transition relative">
+    <div class="bg-card rounded-lg shadow-lg w-full max-w-4xl theme-transition relative">
         <button id="close-report-modal" class="absolute top-4 right-4 text-muted-foreground hover:text-card-foreground transition-colors">
             <i class="fas fa-times text-lg"></i>
         </button>
         <div class="p-6">
             <h2 class="text-2xl font-bold mb-4 text-card-foreground">AI 보고서 생성</h2>
             <p class="text-muted-foreground mb-4">선택한 템플릿을 참고하여 AI가 문서를 생성합니다.</p>
+            
+            <!-- 템플릿 분석 결과 섹션 -->
+            <div id="template-analysis-section" class="mb-6 hidden">
+                <h3 class="text-lg font-bold mb-2 text-card-foreground">템플릿 분석 결과</h3>
+                <div class="bg-secondary/10 rounded-lg p-4 mb-4">
+                    <div id="template-analysis-content" class="text-sm">
+                        <!-- 분석 결과가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
             
             <div class="mb-4">
                 <label for="report-input" class="label">보고서 정보 입력</label>

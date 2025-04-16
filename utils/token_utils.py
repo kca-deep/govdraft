@@ -12,10 +12,12 @@ from utils.logging import logger
 
 @lru_cache(maxsize=16)
 def get_model_prices():
-    """모델별 가격 정보를 반환합니다. 캐싱을 적용하여 성능 최적화."""
+    """모델별 가격 정보를 반환합니다. 캐싱을 적용하여 성능 최적화.
+    가격은 1M(백만) 토큰당 USD 기준.
+    """
     return {
-        "gpt-4o-mini": {"input": 0.15, "output": 0.6},
-        "gpt-4o": {"input": 5.0, "output": 15.0},
+        "gpt-4o-mini": {"input": 0.15, "output": 0.60},  # 백만 토큰당 가격
+        "gpt-4o": {"input": 5.0, "output": 15.0},  # 백만 토큰당 가격
     }
 
 
@@ -77,9 +79,9 @@ def calculate_token_cost(
             )
             model = "gpt-4o-mini"
 
-        # 비용 계산 (USD)
-        input_cost_usd = (input_tokens / 1000) * model_prices[model]["input"]
-        output_cost_usd = (output_tokens / 1000) * model_prices[model]["output"]
+        # 비용 계산 (USD) - 백만 토큰당 가격으로 계산
+        input_cost_usd = (input_tokens / 1_000_000) * model_prices[model]["input"]
+        output_cost_usd = (output_tokens / 1_000_000) * model_prices[model]["output"]
         total_cost_usd = input_cost_usd + output_cost_usd
 
         # 환율 적용

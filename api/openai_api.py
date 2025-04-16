@@ -337,7 +337,7 @@ def _create_analysis_prompt(template_contents: List[Dict]) -> List[Dict[str, str
     # 템플릿 내용을 문자열로 변환
     templates_text = "\n\n===== 템플릿 구분선 =====\n\n".join(
         [
-            f"템플릿 ID: {item['id']}\n제목: {item['title']}\n내용:\n{item['content']}"
+            f"템플릿 ID: {item.get('id', item.get('제목', '알 수 없음'))}\n제목: {item.get('title', item.get('제목', '제목 없음'))}\n내용:\n{item.get('content', item.get('내용', ''))}"
             for item in template_contents
         ]
     )
@@ -441,13 +441,26 @@ def analyze_templates_from_jsonl(jsonl_file_path: str, output_file_path: str) ->
         # JSONL 파일 읽기
         templates = []
         with open(jsonl_file_path, "r", encoding="utf-8") as f:
-            for line in f:
+            for i, line in enumerate(f):
                 if line.strip():
-                    templates.append(json.loads(line))
+                    template = json.loads(line)
+                    # 고유 ID 추가 (없는 경우)
+                    if "id" not in template:
+                        template["id"] = f"template_{i+1}"
+                    templates.append(template)
 
         if not templates:
             logging.error(f"템플릿 데이터가 없습니다: {jsonl_file_path}")
             return False
+
+        # 템플릿에 기본 필드 추가
+        for i, template in enumerate(templates):
+            # '제목'을 'title'로 매핑
+            if "title" not in template and "제목" in template:
+                template["title"] = template["제목"]
+            # '내용'을 'content'로 매핑
+            if "content" not in template and "내용" in template:
+                template["content"] = template["내용"]
 
         # 템플릿 분석
         analysis_results, token_info = analyze_templates(templates)
