@@ -91,7 +91,7 @@
 <!-- 검색 안내 메시지 (초기 상태) -->
 <div id="initial-message" class="flex flex-col items-center justify-center py-16 text-center fade-in" style="animation-delay: 0.3s;">
     <div class="bg-muted rounded-full p-4 mb-4 theme-transition">
-        <i class="fas fa-file-alt text-muted-foreground text-5xl"></i>
+        <i class="fas fa-search text-muted-foreground text-5xl"></i>
     </div>
     <h3 class="text-xl font-medium text-card-foreground mb-2">문서 유형과 키워드를 입력해주세요</h3>
     <p class="text-muted-foreground">문서 유형과 키워드는 필수 입력 사항입니다.</p>
@@ -103,7 +103,7 @@
 </div>
 
 <!-- 로딩 표시기 -->
-<div id="loading" class="loading flex flex-col items-center justify-center my-8 fade-in" style="display: none;">
+<div id="loading" class="loading flex flex-col items-center justify-center py-16 my-8 fade-in hidden"> <!-- display:none 대신 hidden 클래스 사용 -->
     <div class="relative w-12 h-12 mb-2">
         <div class="animate-spin absolute inset-0 rounded-full border-b-2 border-primary"></div>
         <div class="animate-ping absolute inset-0 rounded-full border border-primary opacity-25"></div>

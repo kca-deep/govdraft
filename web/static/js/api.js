@@ -20,7 +20,7 @@ async function fetchTemplates(page = 1) {
     // 로딩 시작 함수
     function showLoading() {
         if (!loading) return;
-        loading.style.display = 'flex';
+        loading.classList.remove('hidden');
         loading.classList.add('active');
         loading.classList.remove('complete');
     }
@@ -30,9 +30,7 @@ async function fetchTemplates(page = 1) {
         if (!loading) return;
         loading.classList.remove('active');
         loading.classList.add('complete');
-        // style.display = 'none' 은 CSS의 .loading.complete 에서 처리하도록 유도 가능
-        // 여기서는 명시적으로 none 처리 유지
-        loading.style.display = 'none';
+        loading.classList.add('hidden');
     }
 
     showLoading(); // 로딩 시작
@@ -82,12 +80,10 @@ async function fetchTemplates(page = 1) {
         
         // 검색 결과 및 페이지네이션 표시
         if (data.items && data.items.length > 0) {
-            // 초기 메시지 숨기기
-            if (initialMessage) initialMessage.classList.add('hidden');
+            // 초기 메시지와 결과 없음 메시지 모두 숨기기
+            if (initialMessage) initialMessage.classList.add('hidden'); // 이미 숨겨져 있더라도 확실하게
             if (noResults) noResults.classList.add('hidden');
             
-            // 클라이언트 측 정렬 로직 제거됨
-
             // API에서 받은 순서 그대로 템플릿 렌더링
             renderTemplates(data.items);
             
@@ -107,8 +103,8 @@ async function fetchTemplates(page = 1) {
             
             hideLoading(); // 성공 시 로딩 종료
         } else {
-            // 검색 결과 없음
-            if (initialMessage) initialMessage.classList.add('hidden');
+            // 검색 결과 없음 - 초기 메시지는 계속 숨겨진 상태 유지
+            if (initialMessage) initialMessage.classList.add('hidden'); // 이미 숨겨져 있더라도 확실하게
             if (noResults) noResults.classList.remove('hidden');
             
             // 검색 결과 및 페이지네이션 숨기기

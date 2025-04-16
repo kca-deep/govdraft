@@ -1,0 +1,20 @@
+/* 초기 메시지 숨김/표시 전환 애니메이션 */
+#initial-message {
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+#initial-message.hidden {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+
+/* 로딩 애니메이션 개선 */
+#loading {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+} 

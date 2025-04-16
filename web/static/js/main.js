@@ -56,8 +56,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 보도자료인 경우 담당자 입력은 선택 사항입니다.
-        // (필수 확인 로직 제거됨)
+        // 초기 메시지 즉시 숨기기
+        if (initialMessage) {
+            initialMessage.classList.add('hidden');
+        }
+        
+        // 로딩 표시기 보이기 - display 스타일 대신 클래스 사용
+        if (loading) {
+            loading.classList.remove('hidden');
+        }
         
         // 검색 결과 초기화
         document.getElementById('templates-container').innerHTML = '';
