@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="flex items-center mb-1.5">
                                         <span class="inline-flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-xs font-medium px-2 py-0.5">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 3a1 1 0 100 2h12a1 1 0 100-2H4zm0 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+                                                <path fill-rule="evenodd" d="M3 5a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm1 3a1 1 0 1 0 0 2h12a1 1 0 1 0 0-2H4zm0 4a1 1 0 1 0 0 2h12a1 1 0 1 0 0-2H4z" clip-rule="evenodd" />
                                             </svg>
                                             키워드
                                         </span>
@@ -497,169 +497,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * 생성된 보고서 결과를 화면에 표시하는 함수
-     * @param {Object} result - API에서 반환된 보고서 결과 객체
+     * 생성된 보고서를 화면에 표시하는 함수
+     * @param {Object} result - API로부터 받은 결과 객체
      */
     function displayGeneratedReport(result) {
-        // 모달 배경 생성
-        const modalBackground = document.createElement('div');
-        modalBackground.id = 'resultModalBackground';
-        modalBackground.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 opacity-0 transition-opacity duration-300';
-        modalBackground.style.backdropFilter = 'blur(2px)';
-
-        // 모달 콘텐츠 생성
-        const modalContent = document.createElement('div');
-        modalContent.id = 'resultModalContent';
-        modalContent.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-xl w-11/12 max-w-3xl max-h-[85vh] overflow-y-auto p-6 transform -translate-y-4 transition-transform duration-300';
-
-        // 제목 및 설명
-        const header = document.createElement('div');
-        header.className = 'mb-6';
-        header.innerHTML = `
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">생성된 보고서</h2>
-            <p class="text-gray-500 dark:text-gray-400">AI가 생성한 보고서 내용입니다.</p>
-        `;
-        modalContent.appendChild(header);
-
-        // 보고서 내용 표시
-        const reportContent = document.createElement('div');
-        reportContent.className = 'mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md whitespace-pre-wrap';
-        reportContent.style.maxHeight = '50vh';
-        reportContent.style.overflow = 'auto';
-        reportContent.style.fontFamily = 'Pretendard, sans-serif';
-        reportContent.textContent = result.report.content || '보고서 내용이 없습니다.';
-        modalContent.appendChild(reportContent);
-
-        // 파일 정보 표시 (있는 경우)
-        if (result.resultFile) {
-            const fileSection = document.createElement('div');
-            fileSection.className = 'mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md';
-            
-            fileSection.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">저장된 파일</h3>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm">${result.resultFile}</p>
+        // 모달 요소 생성
+        const modal = document.createElement('div');
+        modal.className = 'result-modal';
+        modal.id = 'resultModal';
+        
+        // 내용 구성
+        const content = `
+            <div class="result-modal-content">
+                <div class="result-modal-header">
+                    <h3>생성된 보고서</h3>
+                    <button id="closeResultBtn" class="close-button">&times;</button>
+                </div>
+                <div class="result-modal-body">
+                    <p class="result-description">AI가 생성한 내용입니다:</p>
+                    <div class="result-content">
+                        <pre>${result.content}</pre>
                     </div>
-                    <button id="downloadReportBtn" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center">
-                        <i class="fas fa-download mr-2"></i>다운로드
-                    </button>
-                </div>
-            `;
-            
-            modalContent.appendChild(fileSection);
-        }
-
-        // 토큰 사용량 섹션
-        const tokenSection = document.createElement('div');
-        tokenSection.className = 'mb-6';
-        
-        const tokenInfo = result.report.token_usage || {};
-        
-        tokenSection.innerHTML = `
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">토큰 사용량</h3>
-            <div class="grid grid-cols-2 gap-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">입력 토큰</p>
-                    <p class="text-gray-700 dark:text-gray-300">${tokenInfo.input_tokens || 0}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">출력 토큰</p>
-                    <p class="text-gray-700 dark:text-gray-300">${tokenInfo.output_tokens || 0}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">총 토큰</p>
-                    <p class="text-gray-700 dark:text-gray-300">${tokenInfo.total_tokens || 0}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">비용</p>
-                    <p class="text-gray-700 dark:text-gray-300">${tokenInfo.cost ? tokenInfo.cost.toFixed(2) + '원' : '0원'}</p>
+                    
+                    <div class="token-usage-info">
+                        <h4>토큰 사용량</h4>
+                        <p>입력 토큰: <span>${result.token_usage.input_tokens}</span></p>
+                        <p>출력 토큰: <span>${result.token_usage.output_tokens}</span></p>
+                        <p>총 토큰: <span>${result.token_usage.total_tokens}</span></p>
+                        <p>비용: <span>${result.token_usage.cost}원</span></p>
+                    </div>
+                    
+                    <div class="result-actions">
+                        <button id="copyResultBtn" class="action-button">
+                            <i class="fas fa-copy"></i> 복사하기
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
         
-        modalContent.appendChild(tokenSection);
-
-        // 버튼 섹션
-        const buttonSection = document.createElement('div');
-        buttonSection.className = 'flex justify-end gap-4';
+        // 모달에 내용 삽입
+        modal.innerHTML = content;
         
-        const copyButton = document.createElement('button');
-        copyButton.className = 'px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
-        copyButton.textContent = '내용 복사';
-        copyButton.onclick = () => {
-            navigator.clipboard.writeText(result.report.content || '')
-                .then(() => {
-                    copyButton.textContent = '복사됨!';
-                    setTimeout(() => {
-                        copyButton.textContent = '내용 복사';
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('클립보드 복사 실패:', err);
-                    copyButton.textContent = '복사 실패';
-                    setTimeout(() => {
-                        copyButton.textContent = '내용 복사';
-                    }, 2000);
-                });
-        };
+        // body에 모달 추가
+        document.body.appendChild(modal);
         
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors';
-        closeBtn.textContent = '닫기';
-        closeBtn.onclick = closeResultModal;
+        // 모달 표시 (페이드 인 효과)
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
         
-        buttonSection.appendChild(copyButton);
-        buttonSection.appendChild(closeBtn);
-        modalContent.appendChild(buttonSection);
-
-        // 모달을 페이지에 추가
-        modalBackground.appendChild(modalContent);
-        document.body.appendChild(modalBackground);
-
+        // 닫기 버튼 이벤트 리스너
+        document.getElementById('closeResultBtn').addEventListener('click', () => {
+            closeResultModal();
+        });
+        
         // 모달 외부 클릭 시 닫기
-        modalBackground.addEventListener('click', (e) => {
-            if (e.target === modalBackground) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
                 closeResultModal();
             }
         });
-
-        // 다운로드 버튼 이벤트 리스너 추가
-        if (result.resultFile) {
-            setTimeout(() => {
-                const downloadBtn = document.getElementById('downloadReportBtn');
-                if (downloadBtn) {
-                    downloadBtn.addEventListener('click', () => {
-                        window.location.href = `/download/${result.resultFile}`;
-                    });
-                }
-            }, 0);
-        }
-
-        // 모달 표시 애니메이션
-        setTimeout(() => {
-            modalBackground.style.opacity = '1';
-            modalContent.style.transform = 'translateY(0)';
-        }, 10);
+        
+        // 복사 버튼 기능
+        document.getElementById('copyResultBtn').addEventListener('click', () => {
+            const resultText = result.content;
+            navigator.clipboard.writeText(resultText).then(() => {
+                // 복사 성공 메시지
+                const copyBtn = document.getElementById('copyResultBtn');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> 복사됨';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
     }
     
     /**
      * 결과 모달 닫기 함수
      */
     function closeResultModal() {
-        const modalBackground = document.getElementById('resultModalBackground');
-        const modalContent = document.getElementById('resultModalContent');
+        const modal = document.getElementById('resultModal');
+        // 페이드 아웃 효과
+        modal.classList.remove('show');
         
-        if (modalBackground && modalContent) {
-            modalBackground.style.opacity = '0';
-            modalContent.style.transform = 'translateY(-20px)';
-            
-            setTimeout(() => {
-                if (modalBackground.parentNode) {
-                    modalBackground.parentNode.removeChild(modalBackground);
-                }
-            }, 300);
-        }
+        // 애니메이션 후 제거
+        setTimeout(() => {
+            document.body.removeChild(modal);
+        }, 300);
     }
 
     // 보고서 생성 API 호출
