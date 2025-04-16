@@ -244,13 +244,16 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // 분석 중 메시지 표시
             const loadingMessage = document.createElement('div');
-            loadingMessage.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50';
+            loadingMessage.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4'; /* 패딩 추가 */
             loadingMessage.innerHTML = `
-                <div class="bg-card rounded-lg shadow-lg p-6 max-w-md">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md border border-gray-200 dark:border-gray-700"> {/* 명시적 배경색, 그림자 강화, 테두리 추가 */}
                     <div class="flex flex-col items-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-                        <p class="text-lg font-medium">템플릿 내용 분석 중...</p>
-                        <p class="text-sm text-muted-foreground mt-2">문서 구조, 어조, 핵심 키워드를 추출하고 있습니다.</p>
+                        {/* 스피너 색상 변경: 라이트 모드에서 더 잘 보이도록 */}
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-500 dark:border-gray-400 border-t-transparent mb-4"></div>
+                        {/* 텍스트 색상 명시 */}
+                        <p class="text-lg font-medium text-gray-900 dark:text-white">템플릿 내용 분석 중...</p>
+                        {/* 텍스트 색상 명시 */}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center">문서 구조, 어조, 핵심 키워드를 추출하고 있습니다.</p>
                     </div>
                 </div>
             `;
@@ -382,41 +385,100 @@ document.addEventListener('DOMContentLoaded', function() {
                 analysisSection.classList.remove('hidden');
                 
                 // 분석 결과 HTML 생성
-                let analysisHtml = '<div class="space-y-4">';
+                let analysisHtml = `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="text-md font-semibold text-gray-900 dark:text-white">분석된 템플릿 (${analysisData.templates.length}개)</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">템플릿의 구조와 핵심 키워드가 추출되었습니다.</p>
+                        </div>
+                        
+                        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                `;
                 
                 // 각 템플릿에 대한 정보 표시
                 analysisData.templates.forEach((template, index) => {
                     analysisHtml += `
-                        <div class="border-b border-gray-200 dark:border-gray-700 pb-3 ${index > 0 ? 'pt-3' : ''}">
-                            <h4 class="font-semibold">${template.title}</h4>
-                            <div class="mt-2">
-                                <p class="font-medium text-xs text-primary">주요 섹션:</p>
-                                <div class="grid grid-cols-2 gap-2 mt-1">
-                                    ${template.structure.slice(0, 4).map(section => 
-                                        `<div class="text-xs bg-white dark:bg-gray-700 p-2 rounded">
-                                            ${section.name}
-                                        </div>`
-                                    ).join('')}
-                                    ${template.structure.length > 4 ? 
-                                        `<div class="text-xs text-muted-foreground italic">외 ${template.structure.length - 4}개 섹션</div>` : ''}
+                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                                <!-- 제목 및 섹션 정보 -->
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900 dark:text-white text-base mb-2">${template.title}</h4>
+                                    
+                                    <div class="mb-3">
+                                        <div class="flex items-center mb-1.5">
+                                            <span class="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 rounded text-xs font-medium px-2 py-0.5 mr-2">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                    <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/>
+                                                    <path d="M3 10a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2z"/>
+                                                    <path d="M3 16a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2z"/>
+                                                </svg>
+                                                주요 섹션
+                                            </span>
+                                            ${template.structure.length > 4 ? 
+                                                `<span class="text-xs text-gray-500 dark:text-gray-400">(${template.structure.length}개 섹션 중 주요 4개 표시)</span>` : 
+                                                `<span class="text-xs text-gray-500 dark:text-gray-400">(총 ${template.structure.length}개 섹션)</span>`
+                                            }
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            ${template.structure.slice(0, 4).map((section, sectionIndex) => 
+                                                `<div class="flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded-md">
+                                                    <span class="inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full w-5 h-5 text-xs font-medium mr-2">${sectionIndex + 1}</span>
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300 truncate">${section.name}</span>
+                                                </div>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="mt-2">
-                                <p class="font-medium text-xs text-primary">키워드:</p>
-                                <div class="flex flex-wrap gap-1 mt-1">
-                                    ${template.keywords.map(keyword => 
-                                        `<span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">${keyword}</span>`
-                                    ).join('')}
+                                
+                                <!-- 키워드 정보 -->
+                                <div class="md:w-1/3">
+                                    <div class="flex items-center mb-1.5">
+                                        <span class="inline-flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 rounded text-xs font-medium px-2 py-0.5">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 3a1 1 0 100 2h12a1 1 0 100-2H4zm0 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+                                            </svg>
+                                            키워드
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${template.keywords.map(keyword => 
+                                            `<span class="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded-md">
+                                                ${keyword}
+                                            </span>`
+                                        ).join('')}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
                 
-                analysisHtml += '</div>';
+                analysisHtml += `
+                        </div>
+                    </div>
+                    <div class="text-right mt-2">
+                        <button id="toggle-template-detail" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                            모든 섹션 보기/접기
+                        </button>
+                    </div>
+                `;
                 
                 // 분석 결과 내용 업데이트
                 analysisContent.innerHTML = analysisHtml;
+                
+                // 모든 섹션 보기/접기 토글 버튼 이벤트 리스너 추가
+                const toggleButton = document.getElementById('toggle-template-detail');
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function() {
+                        const detailView = document.querySelector('.template-detail-view');
+                        if (detailView) {
+                            detailView.classList.toggle('hidden');
+                            this.textContent = detailView.classList.contains('hidden') ? 
+                                '모든 섹션 보기' : '섹션 접기';
+                        }
+                    });
+                }
             } else {
                 // 분석 결과가 없는 경우
                 analysisContent.innerHTML = '<p class="text-muted-foreground italic">분석 결과가 없습니다.</p>';

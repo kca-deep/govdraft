@@ -426,39 +426,41 @@ def analyze_templates(
         return {"error": f"템플릿 분석 중 오류: {str(e)}"}, {"error": str(e)}
 
 
-def analyze_templates_from_jsonl(jsonl_file_path: str, output_file_path: str) -> bool:
+def analyze_templates_from_json(
+    json_file_path: str, output_file_path: str
+) -> bool:  # 함수 이름 및 파라미터 이름 변경
     """
-    JSONL 파일에서 템플릿 데이터를 읽고 분석 결과를 JSON 파일로 저장합니다.
+    JSON 파일에서 템플릿 데이터 리스트를 읽고 분석 결과를 JSON 파일로 저장합니다. # 설명 변경
 
     Args:
-        jsonl_file_path: 템플릿 데이터가 저장된 JSONL 파일 경로
+        json_file_path: 템플릿 데이터 리스트가 저장된 JSON 파일 경로 # 파라미터 설명 변경
         output_file_path: 분석 결과를 저장할 JSON 파일 경로
 
     Returns:
         bool: 성공 여부
     """
     try:
-        # JSONL 파일 읽기
-        templates = []
-        with open(jsonl_file_path, "r", encoding="utf-8") as f:
-            for i, line in enumerate(f):
-                if line.strip():
-                    template = json.loads(line)
-                    # 고유 ID 추가 (없는 경우)
-                    if "id" not in template:
-                        template["id"] = f"template_{i+1}"
-                    templates.append(template)
+        # JSON 파일 읽기
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            templates = json.load(f)  # json.load() 사용하여 전체 파일 읽기
 
-        if not templates:
-            logging.error(f"템플릿 데이터가 없습니다: {jsonl_file_path}")
+        if (
+            not isinstance(templates, list) or not templates
+        ):  # 읽은 데이터가 리스트인지, 비어있지 않은지 확인
+            logging.error(
+                f"템플릿 데이터가 없거나 유효하지 않은 형식입니다: {json_file_path}"
+            )
             return False
 
         # 템플릿에 기본 필드 추가
         for i, template in enumerate(templates):
-            # '제목'을 'title'로 매핑
+            # 고유 ID 추가 (없는 경우)
+            if "id" not in template:
+                template["id"] = f"template_{i+1}"
+            # '제목'을 'title'로 매핑 (필요 시)
             if "title" not in template and "제목" in template:
                 template["title"] = template["제목"]
-            # '내용'을 'content'로 매핑
+            # '내용'을 'content'로 매핑 (필요 시)
             if "content" not in template and "내용" in template:
                 template["content"] = template["내용"]
 

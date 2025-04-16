@@ -13,7 +13,7 @@ from utils.token_utils import calculate_token_cost
 from utils.logging import logger
 from api.openai_api import (
     analyze_templates as template_analyzer,
-    analyze_templates_from_jsonl,
+    analyze_templates_from_json,  # 함수 이름 변경
     generate_report_prompt,
     call_openai_api,
     generate_draft as generate_draft_api,
@@ -138,17 +138,18 @@ def analyze_templates():
 
         # 타임스탬프를 이용하여 파일명 생성
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        jsonl_filename = os.path.join(
-            RESULT_DIR, f"template_analysis_{timestamp}.jsonl"
+        json_filename = os.path.join(
+            RESULT_DIR, f"template_analysis_{timestamp}.json"  # 확장자 변경
         )
 
-        # JSONL 파일 저장
-        with open(jsonl_filename, "w", encoding="utf-8") as f:
-            for item in jsonl_items:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        # JSON 파일 저장
+        with open(json_filename, "w", encoding="utf-8") as f:
+            json.dump(
+                jsonl_items, f, ensure_ascii=False, indent=2
+            )  # json.dump 사용 및 들여쓰기 추가
 
         logger.info(
-            f"템플릿 분석 완료: 파일={jsonl_filename}, 템플릿 수={len(jsonl_items)}"
+            f"템플릿 분석 완료: 파일={json_filename}, 템플릿 수={len(jsonl_items)}"  # 로그 메시지 파일명 변수 변경
         )
 
         # 응답 생성
@@ -156,7 +157,7 @@ def analyze_templates():
             "analyzed_at": datetime.datetime.now().isoformat(),
             "template_count": len(jsonl_items),
             "template_ids": template_ids,
-            "output_file": jsonl_filename,
+            "output_file": json_filename,  # 응답의 파일명 변수 변경
             "status": "success",
         }
 
@@ -211,8 +212,8 @@ def analyze_content():
         output_filename = f"template_analysis_{timestamp}.json"
         output_file = os.path.join(analysis_dir, output_filename)
 
-        # 템플릿 내용 분석
-        success = analyze_templates_from_jsonl(jsonl_file, output_file)
+        # 템플릿 내용 분석 (수정된 함수 호출)
+        success = analyze_templates_from_json(jsonl_file, output_file)
 
         if not success:
             logger.error("템플릿 내용 분석 실패")
