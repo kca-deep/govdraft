@@ -8,7 +8,7 @@ import re
 import json
 import time
 import logging
-from typing import Dict, List, Any, Tuple, Optional, Union
+from typing import Dict, List, Any, Tuple, Union
 from datetime import datetime
 import openai
 from dotenv import load_dotenv
@@ -20,14 +20,8 @@ from utils.logging import logger
 load_dotenv()
 
 # OpenAI API 관련 설정
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    OPENAI_API_KEY = Config.OPENAI_API_KEY
-
-OPENAI_MODEL = os.getenv("OPENAI_MODEL")
-if not OPENAI_MODEL:
-    OPENAI_MODEL = Config.OPENAI_MODEL
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", Config.OPENAI_API_KEY)
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", Config.OPENAI_MODEL)
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
 RETRY_DELAY = int(os.getenv("RETRY_DELAY", "2"))
@@ -38,72 +32,41 @@ if not OPENAI_API_KEY:
         "OpenAI API 키가 설정되지 않았습니다. 환경 변수 OPENAI_API_KEY를 확인해주세요."
     )
 else:
-    # API 키 설정
     openai.api_key = OPENAI_API_KEY
     logger.info(f"OpenAI 모델: {OPENAI_MODEL}")
 
 
-# HTML 태그 제거 함수
-def remove_html_tags(text: str) -> str:
-    """HTML 태그를 제거하고 텍스트만 추출합니다."""
-    if not text:
-        return ""
-    clean_text = re.sub(r"<.*?>", " ", text)
-    clean_text = re.sub(r"\s+", " ", clean_text).strip()
-    return clean_text
-
-
 def call_openai_api(
-    messages_or_prompt: Union[List[Dict[str, str]], str],
+    messages: List[Dict[str, str]],
     model: str = OPENAI_MODEL,
     temperature: float = 0.2,
-    max_tokens: Optional[int] = None,
+    max_tokens: int = None,
     max_retries: int = 3,
     initial_retry_delay: float = 1.0,
 ) -> Tuple[Dict[str, Any], Dict[str, Union[int, float, str]]]:
     """
     OpenAI API를 호출하여 응답을 받아옵니다.
-    messages 형식과 단일 prompt 문자열 두 가지 형식을 모두 지원합니다.
 
     Args:
-        messages_or_prompt: 메시지 리스트 또는 단일 프롬프트 문자열
-        model: 사용할 모델 (기본값: Config.OPENAI_MODEL)
-        temperature: 생성 다양성 조절 (기본값: 0.2)
-        max_tokens: 최대 생성 토큰 수 (기본값: None, API 기본값 사용)
-        max_retries: 최대 재시도 횟수 (기본값: 3)
-        initial_retry_delay: 초기 재시도 지연 시간(초) (기본값: 1.0)
+        messages: 메시지 리스트
+        model: 사용할 모델
+        temperature: 생성 다양성 조절
+        max_tokens: 최대 생성 토큰 수
+        max_retries: 최대 재시도 횟수
+        initial_retry_delay: 초기 재시도 지연 시간(초)
 
     Returns:
         응답 내용과 토큰 사용량 정보를 포함한 튜플
     """
     retry_delay = initial_retry_delay
-    is_messages_format = isinstance(messages_or_prompt, list)
-
-    # 메시지 또는 프롬프트 준비
-    if is_messages_format:
-        messages = messages_or_prompt
-        request_args = {"messages": messages}
-    else:
-        prompt = messages_or_prompt
-        request_args = {"prompt": prompt}
-
-    # 공통 API 요청 인자 설정
-    request_args.update(
-        {
-            "model": model,
-            "temperature": temperature,
-        }
-    )
+    request_args = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+    }
 
     if max_tokens:
         request_args["max_tokens"] = max_tokens
-
-    # 요청 전 입력 토큰 수 계산
-    if is_messages_format:
-        # 메시지 형식의 입력을 문자열로 변환하여 토큰 계산
-        input_text = json.dumps(messages, ensure_ascii=False)
-    else:
-        input_text = prompt
 
     start_time = time.time()
 
@@ -113,21 +76,12 @@ def call_openai_api(
                 f"OpenAI API 호출 시작: 모델={model}, 시도={attempt + 1}/{max_retries}"
             )
 
-            # API 요청
-            if is_messages_format:
-                response = openai.ChatCompletion.create(**request_args)
-                result = {
-                    "content": response.choices[0].message.content.strip(),
-                    "usage": response.usage,
-                }
-            else:
-                response = openai.Completion.create(**request_args)
-                result = {
-                    "content": response.choices[0].text.strip(),
-                    "usage": response.usage,
-                }
+            response = openai.ChatCompletion.create(**request_args)
+            result = {
+                "content": response.choices[0].message.content.strip(),
+                "usage": response.usage,
+            }
 
-            # 토큰 사용량 계산
             input_tokens = result["usage"]["prompt_tokens"]
             output_tokens = result["usage"]["completion_tokens"]
             token_info = calculate_token_cost(input_tokens, output_tokens, model)
@@ -147,7 +101,7 @@ def call_openai_api(
                     f"API 속도 제한, {retry_delay}초 후 재시도 ({attempt + 1}/{max_retries})"
                 )
                 time.sleep(retry_delay)
-                retry_delay *= 2  # 지수 백오프
+                retry_delay *= 2
             else:
                 logger.error("API 속도 제한으로 최대 재시도 횟수 초과")
                 raise
@@ -178,93 +132,58 @@ def analyze_document_with_ai(text: str) -> Dict[str, Any]:
     Returns:
         Dict: 분석 결과 (구조, 어조, 핵심 키워드 등)
     """
-    # HTML 태그 제거
-    clean_text = remove_html_tags(text)
+    # HTML 태그 제거 및 텍스트 정제
+    clean_text = re.sub(r"<.*?>", " ", text) if text else ""
+    clean_text = re.sub(r"\s+", " ", clean_text).strip()
 
-    # 너무 긴 텍스트는 적절히 잘라서 사용 (토큰 한도 고려)
-    max_text_length = 15000  # 약 5000 토큰 정도
+    # 토큰 한도를 고려하여 텍스트 길이 제한
+    max_text_length = 15000
     if len(clean_text) > max_text_length:
         clean_text = clean_text[:max_text_length] + "..."
 
-    prompt = f"""
-다음 문서를 분석하여 아래 카테고리에 따라 JSON 형식으로 결과를 제공하세요:
-
-1. 문서 구조:
-   - paragraph_count: 단락 수
-   - sentence_count: 대략적인 문장 수
-   - avg_sentence_length: 평균 문장 길이 (단어 수)
-   - has_table: 표 포함 여부 (true/false)
-   - has_list: 목록 포함 여부 (true/false)
-   - has_image: 이미지 태그 포함 여부 (true/false)
-
-2. 어조 분석:
-   - formality: 형식성 점수 (0-1, 1이 가장 공식적)
-   - sentiment: 감정 점수 (-1: 부정, 0: 중립, 1: 긍정)
-   - objectivity: 객관성 점수 (0-1, 1이 가장 객관적)
-
-3. 핵심 키워드:
-   - 문서의 핵심 키워드 10개 목록 (중요도 순)
-
-4. 요약:
-   - 문서의 핵심 내용을 200자 이내로 요약
-
-응답은 다음 JSON 형식으로 제공하세요:
-{{
-  "structure": {{
-    "paragraph_count": 숫자,
-    "sentence_count": 숫자,
-    "avg_sentence_length": 숫자,
-    "has_table": 불리언,
-    "has_list": 불리언,
-    "has_image": 불리언
-  }},
-  "tone": {{
-    "formality": 숫자,
-    "sentiment": 숫자,
-    "objectivity": 숫자
-  }},
-  "keywords": [키워드1, 키워드2, ...],
-  "summary": "요약 내용"
-}}
-
-분석할 문서:
-```
-{clean_text}
-```
-"""
+    prompt = [
+        {
+            "role": "system",
+            "content": """문서를 분석하여 다음 카테고리에 따라 JSON 형식으로 결과를 제공하세요:
+1. 문서 구조 (paragraph_count, sentence_count, avg_sentence_length, has_table, has_list, has_image)
+2. 어조 분석 (formality, sentiment, objectivity)
+3. 핵심 키워드 (10개)
+4. 요약 (200자 이내)""",
+        },
+        {"role": "user", "content": clean_text},
+    ]
 
     try:
         result, token_info = call_openai_api(prompt)
         content = result["content"]
 
-        # JSON 파싱
         try:
+            # JSON 직접 파싱 시도
             analysis_result = json.loads(content)
             analysis_result["token_info"] = token_info
             return analysis_result
         except json.JSONDecodeError:
-            # JSON 파싱 실패 시 텍스트에서 JSON 부분 추출 시도
+            # JSON 부분 추출 시도
             json_pattern = re.compile(r"({.*})", re.DOTALL)
             match = json_pattern.search(content)
-            if match:
+            if match and (json_str := match.group(1)):
                 try:
-                    analysis_result = json.loads(match.group(1))
+                    analysis_result = json.loads(json_str)
                     analysis_result["token_info"] = token_info
                     return analysis_result
                 except json.JSONDecodeError:
-                    logging.error("JSON 추출 실패: 응답 형식이 유효하지 않습니다.")
+                    pass
 
             # 기본 응답 생성
-            logging.warning("JSON 파싱 실패: 기본 응답을 생성합니다.")
             return {
                 "structure": {
                     "paragraph_count": 0,
                     "sentence_count": 0,
                     "avg_sentence_length": 0,
                     "has_table": "<table>" in text.lower(),
-                    "has_list": "<ul>" in text.lower()
-                    or "<ol>" in text.lower()
-                    or "<li>" in text.lower(),
+                    "has_list": any(
+                        tag in text.lower() for tag in ["<ul>", "<ol>", "<li>"]
+                    ),
                     "has_image": "<img" in text.lower(),
                 },
                 "tone": {"formality": 0.5, "sentiment": 0, "objectivity": 0.5},
@@ -275,16 +194,16 @@ def analyze_document_with_ai(text: str) -> Dict[str, Any]:
             }
 
     except Exception as e:
-        logging.error(f"문서 분석 중 오류: {str(e)}")
+        logger.error(f"문서 분석 중 오류: {str(e)}")
         return {
             "structure": {
                 "paragraph_count": 0,
                 "sentence_count": 0,
                 "avg_sentence_length": 0,
                 "has_table": "<table>" in text.lower(),
-                "has_list": "<ul>" in text.lower()
-                or "<ol>" in text.lower()
-                or "<li>" in text.lower(),
+                "has_list": any(
+                    tag in text.lower() for tag in ["<ul>", "<ol>", "<li>"]
+                ),
                 "has_image": "<img" in text.lower(),
             },
             "tone": {"formality": 0.5, "sentiment": 0, "objectivity": 0.5},
@@ -294,102 +213,6 @@ def analyze_document_with_ai(text: str) -> Dict[str, Any]:
         }
 
 
-def _extract_json_from_markdown(text: str) -> Dict:
-    """
-    마크다운 형식의 텍스트에서 JSON 부분을 추출합니다.
-
-    Args:
-        text: 마크다운 텍스트
-
-    Returns:
-        추출된 JSON 객체
-    """
-    # JSON 코드 블록 패턴 (```json과 ``` 사이의 내용)
-    json_pattern = r"```(?:json)?\n([\s\S]*?)\n```"
-    match = re.search(json_pattern, text)
-
-    if match:
-        json_str = match.group(1)
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON 파싱 오류: {str(e)}")
-            logger.debug(f"파싱 실패한 JSON 문자열: {json_str}")
-
-    # JSON 블록을 찾지 못한 경우, 텍스트 전체가 JSON인지 시도
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        logger.error("JSON 형식을 찾을 수 없음, 빈 사전 반환")
-        return {}
-
-
-def _create_analysis_prompt(template_contents: List[Dict]) -> List[Dict[str, str]]:
-    """
-    템플릿 분석을 위한 프롬프트를 생성합니다.
-
-    Args:
-        template_contents: 분석할 템플릿 내용 목록
-
-    Returns:
-        OpenAI API 호출용 메시지 리스트
-    """
-    # 템플릿 내용을 문자열로 변환
-    templates_text = "\n\n===== 템플릿 구분선 =====\n\n".join(
-        [
-            f"템플릿 ID: {item.get('id', item.get('제목', '알 수 없음'))}\n제목: {item.get('title', item.get('제목', '제목 없음'))}\n내용:\n{item.get('content', item.get('내용', ''))}"
-            for item in template_contents
-        ]
-    )
-
-    system_message = """
-    당신은 문서 템플릿 분석 전문가입니다. 제공된 정부 문서 템플릿을 분석하여 다음 작업을 수행하세요:
-    
-    1. 각 템플릿의 주요 표준 항목을 식별하고 구조화하세요.
-    2. 각 항목에 대한 설명과 예시를 제공하세요.
-    3. 좋은 작성 방법에 대한 간략한 조언을 추가하세요.
-    4. 템플릿의 핵심 키워드를 추출하세요.
-    
-    정확히 다음 JSON 형식으로 응답하세요:
-    
-    ```json
-    {
-      "templates": [
-        {
-          "id": "템플릿 ID",
-          "title": "템플릿 제목",
-          "structure": [
-            {
-              "name": "항목명",
-              "description": "항목 설명",
-              "example": "항목 예시",
-              "writing_tip": "작성 팁"
-            }
-          ],
-          "keywords": ["키워드1", "키워드2", "..."]
-        }
-      ]
-    }
-    ```
-    
-    항목명은 실제 템플릿에서 사용된 정확한 명칭을 사용하세요.
-    """
-
-    user_message = f"""
-    다음 문서 템플릿을 분석하세요:
-    
-    {templates_text}
-    
-    위 템플릿의 표준 항목을 식별하고 각 항목에 대한 설명, 예시, 작성 팁을 제공하세요.
-    형식은 반드시 지정된 JSON 형식으로 응답해주세요.
-    """
-
-    return [
-        {"role": "system", "content": system_message},
-        {"role": "user", "content": user_message},
-    ]
-
-
 def analyze_templates(
     template_contents: List[Dict[str, Any]],
 ) -> Tuple[Dict[str, Any], Dict[str, Union[int, float, str]]]:
@@ -397,7 +220,7 @@ def analyze_templates(
     여러 문서 템플릿을 분석하여 표준 항목과 내용을 추출합니다.
 
     Args:
-        template_contents: 분석할 템플릿 내용 목록 (각 항목은 id, title, content 키를 포함)
+        template_contents: 분석할 템플릿 내용 목록
 
     Returns:
         분석 결과와 토큰 사용량 정보를 포함한 튜플
@@ -405,18 +228,50 @@ def analyze_templates(
     try:
         logger.info(f"템플릿 분석 시작: {len(template_contents)}개 템플릿")
 
-        # 분석 프롬프트 생성
-        messages = _create_analysis_prompt(template_contents)
+        # 템플릿 내용을 문자열로 변환
+        templates_text = "\n\n===== 템플릿 구분선 =====\n\n".join(
+            f"템플릿 ID: {item.get('id', 'unknown')}\n제목: {item.get('title', '제목 없음')}\n내용:\n{item.get('content', '')}"
+            for item in template_contents
+        )
 
-        # OpenAI API 호출
+        messages = [
+            {
+                "role": "system",
+                "content": """당신은 문서 템플릿 분석 전문가입니다. 제공된 정부 문서 템플릿을 분석하여 다음 작업을 수행하세요:
+1. 각 템플릿의 주요 표준 항목을 식별하고 구조화
+2. 각 항목에 대한 설명과 예시 제공
+3. 좋은 작성 방법에 대한 간략한 조언 추가
+4. 템플릿의 핵심 키워드 추출""",
+            },
+            {
+                "role": "user",
+                "content": f"다음 템플릿을 분석하세요:\n\n{templates_text}",
+            },
+        ]
+
         result, token_info = call_openai_api(messages)
 
-        # 응답에서 JSON 추출
-        analysis_result = _extract_json_from_markdown(result["content"])
-
-        if not analysis_result:
-            logger.warning("템플릿 분석 결과가 비어있거나 유효하지 않음")
-            analysis_result = {"templates": [], "error": "분석 결과를 파싱할 수 없음"}
+        # JSON 응답 추출 및 파싱
+        content = result["content"]
+        try:
+            # JSON 직접 파싱 시도
+            analysis_result = json.loads(content)
+        except json.JSONDecodeError:
+            # JSON 코드 블록에서 추출 시도
+            json_pattern = r"```(?:json)?\n([\s\S]*?)\n```"
+            if match := re.search(json_pattern, content):
+                try:
+                    analysis_result = json.loads(match.group(1))
+                except json.JSONDecodeError:
+                    analysis_result = {
+                        "templates": [],
+                        "error": "분석 결과를 파싱할 수 없음",
+                    }
+            else:
+                analysis_result = {
+                    "templates": [],
+                    "error": "분석 결과를 파싱할 수 없음",
+                }
 
         logger.info(f"템플릿 분석 완료: {len(template_contents)}개 템플릿")
         return analysis_result, token_info
@@ -426,120 +281,46 @@ def analyze_templates(
         return {"error": f"템플릿 분석 중 오류: {str(e)}"}, {"error": str(e)}
 
 
-def analyze_templates_from_json(
-    json_file_path: str, output_file_path: str
-) -> bool:  # 함수 이름 및 파라미터 이름 변경
+def analyze_templates_from_json(json_file_path: str, output_file_path: str) -> bool:
     """
-    JSON 파일에서 템플릿 데이터 리스트를 읽고 분석 결과를 JSON 파일로 저장합니다. # 설명 변경
+    JSON 파일에서 템플릿 데이터를 읽고 분석 결과를 저장합니다.
 
     Args:
-        json_file_path: 템플릿 데이터 리스트가 저장된 JSON 파일 경로 # 파라미터 설명 변경
+        json_file_path: 템플릿 데이터가 저장된 JSON 파일 경로
         output_file_path: 분석 결과를 저장할 JSON 파일 경로
 
     Returns:
         bool: 성공 여부
     """
     try:
-        # JSON 파일 읽기
         with open(json_file_path, "r", encoding="utf-8") as f:
-            templates = json.load(f)  # json.load() 사용하여 전체 파일 읽기
+            templates = json.load(f)
 
-        if (
-            not isinstance(templates, list) or not templates
-        ):  # 읽은 데이터가 리스트인지, 비어있지 않은지 확인
-            logging.error(
+        if not isinstance(templates, list) or not templates:
+            logger.error(
                 f"템플릿 데이터가 없거나 유효하지 않은 형식입니다: {json_file_path}"
             )
             return False
 
-        # 템플릿에 기본 필드 추가
+        # 템플릿 기본 필드 정규화
         for i, template in enumerate(templates):
-            # 고유 ID 추가 (없는 경우)
-            if "id" not in template:
-                template["id"] = f"template_{i+1}"
-            # '제목'을 'title'로 매핑 (필요 시)
-            if "title" not in template and "제목" in template:
-                template["title"] = template["제목"]
-            # '내용'을 'content'로 매핑 (필요 시)
-            if "content" not in template and "내용" in template:
-                template["content"] = template["내용"]
+            template.setdefault("id", f"template_{i+1}")
+            template.setdefault("title", template.get("제목", "제목 없음"))
+            template.setdefault("content", template.get("내용", ""))
 
-        # 템플릿 분석
-        analysis_results, token_info = analyze_templates(templates)
-
-        # 결과 저장
+        # 템플릿 분석 및 결과 저장
+        analysis_results, _ = analyze_templates(templates)
         with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(analysis_results, f, ensure_ascii=False, indent=2)
 
-        logging.info(
+        logger.info(
             f"템플릿 분석 완료: {len(templates)}개 분석됨, 결과 저장: {output_file_path}"
         )
         return True
 
     except Exception as e:
-        logging.error(f"템플릿 분석 중 오류: {str(e)}")
+        logger.error(f"템플릿 분석 중 오류: {str(e)}")
         return False
-
-
-def generate_report_prompt(
-    user_input: Dict[str, str], selected_templates: List[Dict[str, str]]
-) -> List[Dict[str, str]]:
-    """
-    사용자 입력과 선택된 템플릿을 기반으로 보고서 생성 프롬프트를 구성합니다.
-
-    Args:
-        user_input: 사용자가 입력한 보고서 정보 (제목, 목표, 요구사항 등)
-        selected_templates: 선택된 템플릿 리스트
-
-    Returns:
-        OpenAI API 요청에 사용될 메시지 리스트
-    """
-    title = user_input.get("title", "제목 없음")
-    goal = user_input.get("goal", "")
-    requirements = user_input.get("requirements", "")
-    audience = user_input.get("audience", "")
-
-    # 템플릿 내용 추출
-    template_contents = []
-
-    for template in selected_templates:
-        template_content = template.get("content", "")
-        template_title = template.get("title", "제목 없음")
-
-        if template_content:
-            template_contents.append(f"### {template_title}\n{template_content}")
-
-    # 사용자 요구사항 구성
-    user_requirements = []
-    if title:
-        user_requirements.append(f"제목: {title}")
-    if goal:
-        user_requirements.append(f"목표: {goal}")
-    if requirements:
-        user_requirements.append(f"요구사항: {requirements}")
-    if audience:
-        user_requirements.append(f"대상 독자: {audience}")
-
-    user_requirements_text = "\n".join(user_requirements)
-    templates_text = "\n\n".join(template_contents)
-
-    # 최종 프롬프트 구성
-    system_message = """당신은 한국의 정부 문서 작성을 돕는 전문가입니다. 사용자가 제공한 템플릿과 요구사항을 기반으로 고품질의 보고서를 작성해주세요.
-주어진 템플릿의 구조와 형식을 참고하되, 요구사항에 맞게 내용을 조정하세요.
-출력은 마크다운 형식으로 제공하며, 필요에 따라 표와 목록을 포함할 수 있습니다."""
-
-    user_message = f"""## 사용자 요구사항
-{user_requirements_text}
-
-## 참고 템플릿
-{templates_text}
-
-위 요구사항과 참고 템플릿을 기반으로 보고서를 작성해주세요."""
-
-    return [
-        {"role": "system", "content": system_message},
-        {"role": "user", "content": user_message},
-    ]
 
 
 def generate_draft(
@@ -559,24 +340,43 @@ def generate_draft(
     start_time = time.time()
 
     try:
-        # 프롬프트 생성
-        messages = generate_report_prompt(user_input, selected_templates)
+        # 템플릿 내용 추출 및 요구사항 구성
+        template_contents = [
+            f"### {template.get('title', '제목 없음')}\n{template.get('content', '')}"
+            for template in selected_templates
+        ]
 
-        # OpenAI API 호출
-        result, token_info = call_openai_api(
-            messages, model=OPENAI_MODEL, temperature=0.7, max_tokens=2000
-        )
+        user_requirements = [
+            f"{key}: {value}" for key, value in user_input.items() if value
+        ]
 
-        draft_content = result.get("content", "")
+        messages = [
+            {
+                "role": "system",
+                "content": """당신은 한국의 정부 문서 작성을 돕는 전문가입니다. 
+사용자가 제공한 템플릿과 요구사항을 기반으로 고품질의 보고서를 작성해주세요.
+주어진 템플릿의 구조와 형식을 참고하되, 요구사항에 맞게 내용을 조정하세요.""",
+            },
+            {
+                "role": "user",
+                "content": f"""## 사용자 요구사항
+{chr(10).join(user_requirements)}
 
-        # 응답 형식화
+## 참고 템플릿
+{chr(10).join(template_contents)}
+
+위 요구사항과 참고 템플릿을 기반으로 보고서를 작성해주세요.""",
+            },
+        ]
+
+        result, token_info = call_openai_api(messages, temperature=0.7, max_tokens=2000)
+
         response = {
             "title": user_input.get("title", "제목 없음"),
-            "content": draft_content,
+            "content": result["content"],
             "timestamp": datetime.now().isoformat(),
         }
 
-        # 토큰 사용량 및 처리 시간 기록
         processing_time = time.time() - start_time
         logger.info(
             f"초안 생성 완료: {processing_time:.2f}초 소요, "
@@ -587,12 +387,9 @@ def generate_draft(
 
     except Exception as e:
         logger.error(f"초안 생성 중 오류 발생: {str(e)}")
-        error_response = {
+        return {
             "title": user_input.get("title", "제목 없음"),
             "error": f"초안 생성 중 오류: {str(e)}",
             "content": "",
             "timestamp": datetime.now().isoformat(),
-        }
-        error_token_info = {"error": str(e)}
-
-        return error_response, error_token_info
+        }, {"error": str(e)}

@@ -242,23 +242,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 템플릿 내용 분석 함수
     async function analyzeTemplateContent(jsonlFile) {
         try {
-            // 분석 중 메시지 표시
-            const loadingMessage = document.createElement('div');
-            loadingMessage.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4'; /* 패딩 추가 */
-            loadingMessage.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md border border-gray-200 dark:border-gray-700"> {/* 명시적 배경색, 그림자 강화, 테두리 추가 */}
-                    <div class="flex flex-col items-center">
-                        {/* 스피너 색상 변경: 라이트 모드에서 더 잘 보이도록 */}
-                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-500 dark:border-gray-400 border-t-transparent mb-4"></div>
-                        {/* 텍스트 색상 명시 */}
-                        <p class="text-lg font-medium text-gray-900 dark:text-white">템플릿 내용 분석 중...</p>
-                        {/* 텍스트 색상 명시 */}
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center">문서 구조, 어조, 핵심 키워드를 추출하고 있습니다.</p>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(loadingMessage);
-            
             const response = await fetch('/api/drafts/analyze-content', {
                 method: 'POST',
                 headers: {
@@ -268,9 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     jsonl_file: jsonlFile
                 }),
             });
-            
-            // 로딩 메시지 제거
-            document.body.removeChild(loadingMessage);
             
             if (!response.ok) {
                 const errorText = await response.text();

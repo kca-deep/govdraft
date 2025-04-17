@@ -14,8 +14,6 @@ from utils.logging import logger
 from api.openai_api import (
     analyze_templates as template_analyzer,
     analyze_templates_from_json,  # 함수 이름 변경
-    generate_report_prompt,
-    call_openai_api,
     generate_draft as generate_draft_api,
 )
 from slugify import slugify
