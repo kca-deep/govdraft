@@ -164,7 +164,10 @@ def analyze_templates():
         return jsonify(response)
 
     except Exception as e:
-        logger.error(f"템플릿 분석 중 오류: {str(e)}")
+        # 오류 발생 시 함수명과 입력값 로깅, 스택 트레이스 포함
+        logger.exception(
+            f"analyze_templates 함수 오류 발생: template_ids={data.get('template_ids', 'N/A')}"
+        )
         return jsonify({"error": f"템플릿 분석 중 오류가 발생했습니다: {str(e)}"}), 500
 
 
@@ -231,7 +234,10 @@ def analyze_content():
         return jsonify(response)
 
     except Exception as e:
-        logger.error(f"템플릿 내용 분석 중 오류: {str(e)}")
+        # 오류 발생 시 함수명과 입력 파일 경로 로깅, 스택 트레이스 포함
+        logger.exception(
+            f"analyze_content 함수 오류 발생: jsonl_file={data.get('jsonl_file', 'N/A')}"
+        )
         return (
             jsonify({"error": f"템플릿 내용 분석 중 오류가 발생했습니다: {str(e)}"}),
             500,
@@ -358,7 +364,10 @@ def generate_draft():
         return jsonify(response)
 
     except Exception as e:
-        logger.error(f"보고서 생성 중 오류: {str(e)}")
+        # 오류 발생 시 함수명, 입력값(ID, 입력 길이) 로깅, 스택 트레이스 포함
+        logger.exception(
+            f"generate_draft 함수 오류 발생: template_ids={data.get('template_ids', 'N/A')}, user_input 길이={len(data.get('user_input', ''))}"
+        )
         return jsonify({"error": f"보고서 생성 중 오류가 발생했습니다: {str(e)}"}), 500
 
 
@@ -387,7 +396,8 @@ def serve_analysis_file(filename):
         return jsonify(file_content)
 
     except Exception as e:
-        logger.error(f"분석 파일 제공 중 오류: {str(e)}")
+        # 오류 발생 시 함수명과 파일명 로깅, 스택 트레이스 포함
+        logger.exception(f"serve_analysis_file 함수 오류 발생: filename={filename}")
         return (
             jsonify({"error": f"분석 파일 제공 중 오류가 발생했습니다: {str(e)}"}),
             500,
