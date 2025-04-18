@@ -203,13 +203,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 let errorMessage = `API 요청 실패: ${response.status}`;
                 
                 try {
-                    // 응답이 JSON인지 확인 후 오류 메시지 추출
                     const errorJson = JSON.parse(errorText);
                     if (errorJson.error) {
                         errorMessage = errorJson.error;
                     }
                 } catch (e) {
-                    // JSON 파싱 실패 시 원본 텍스트 사용
                     if (errorText) {
                         errorMessage += ` - ${errorText}`;
                     }
@@ -227,6 +225,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm('수집된 템플릿 데이터를 자연어 처리(NLP) 기법으로 분석하시겠습니까?\n문서 구조, 어조, 핵심 키워드를 추출하고 결과는 JSON으로 저장됩니다.')) {
                 // 템플릿 내용 분석 API 호출
                 await analyzeTemplateContent(result.output_file);
+            }
+            
+            // 분석 완료 후 보고서 입력창에 포커스 설정
+            const reportInput = document.getElementById("report-input");
+            if (reportInput) {
+                reportInput.focus();
+                reportInput.setSelectionRange(
+                    reportInput.value.length,
+                    reportInput.value.length
+                );
             }
             
         } catch (error) {
@@ -627,15 +635,25 @@ document.addEventListener('DOMContentLoaded', function() {
      * 결과 모달 닫기 함수
      */
     function closeResultModal() {
-        const modal = document.getElementById('resultModalBackground');
-        // 페이드 아웃 효과
-        modal.style.opacity = '0';
-        modal.firstElementChild.style.transform = 'translateY(-4rem)';
-        
-        // 애니메이션 후 제거
-        setTimeout(() => {
-            document.body.removeChild(modal);
-        }, 300);
+        const modal = document.getElementById("resultModalBackground");
+        if (modal) {
+            modal.style.opacity = '0';
+            modal.firstElementChild.style.transform = 'translateY(-4rem)';
+            
+            setTimeout(() => {
+                document.body.removeChild(modal);
+                // 모달이 닫힌 후 textarea에 포커스 설정
+                const reportInput = document.getElementById("report-input");
+                if (reportInput) {
+                    reportInput.focus();
+                    // 커서를 텍스트 끝으로 이동
+                    reportInput.setSelectionRange(
+                        reportInput.value.length,
+                        reportInput.value.length
+                    );
+                }
+            }, 300); // 300ms는 transition 시간과 일치
+        }
     }
 
     // 보고서 생성 API 호출
